@@ -22,8 +22,8 @@
 #include <E131.h>
 #include <Servo.h>
 
-const char ssid[] = "Street_Cam1";         /* Replace with your SSID */
-const char passphrase[] = "1sthouse";   /* Replace with your WPA2 passphrase */
+const char ssid[] = "-------";         /* Replace with your SSID */
+const char passphrase[] = "-------";   /* Replace with your WPA2 passphrase */
 
 // pan variables
 int pan_data;

@@ -24,8 +24,9 @@
 
 
 
-const char ssid[] = "--------";         /* Replace with your SSID */
-const char passphrase[] = "-------";   /* Replace with your WPA2 passphrase */
+
+//const char ssid[] = "--------";         /* Replace with your SSID */
+//const char passphrase[] = "-------";   /* Replace with your WPA2 passphrase */
 
 // pan variables
 int pan_data;
@@ -33,6 +34,7 @@ int pan_data1;
 int pan_data2;
 int pan16b;
 int pan_angle;
+int pan_angle_last;
 
 // tilt variables
 int tilt_data;
@@ -59,7 +61,13 @@ void setup() {
     pan_servo.write(90);
     tilt_servo.attach(4); // nodemcu D2 output
     tilt_servo.write(90);
-
+    delay(1000);
+    pan_servo.write(0);
+    tilt_servo.write(0);
+    delay(1000);
+    pan_servo.write(180);
+    tilt_servo.write(180);
+    delay(1000);
 }
 
 void loop() {
@@ -78,38 +86,50 @@ void loop() {
                 e131.data[2],              // tilt 1 data for Channel 3 this chanel for 8bit
                 e131.data[3],              // tilt 2 data for Channel 4
                 e131.data[4]);              // intenisty data for Channel 5
-
+        
         // get channel datat
         pan_data1 = e131.data[0];
         pan_data2 = e131.data[1];
         tilt_data1 = e131.data[2];
         tilt_data2 = e131.data[3];
                        
-        // 16 bit math
-        pan_data = pan_data1 * pan_data2;
-        tilt_data = tilt_data1 * tilt_data2;
+        // 16 bit math 
+        pan_data = (pan_data1 *256) + pan_data2;
+        tilt_data = (tilt_data1 * 256) + tilt_data2;
+
 
         // 8b angle
         //pan_angle = map(pan_data1,0,255,0,180);
         //tilt_angle = map(tilt_data1,0,255,0,180);
 
         // 16b angle
-        pan_angle = map(pan_data,0,65025,700,2300);
-        tilt_angle = map(tilt_data,0,65025,700,2300);
+        pan_angle = map(pan_data,0,65025,550,2330);
+        tilt_angle = map(tilt_data,0,65025,550,2330);
         
-        // for 16b fiture
-        pan_servo.writeMicroseconds(pan_angle);
-        tilt_servo.writeMicroseconds(tilt_angle);
-        
-        // for 8 bit fixture
-        //pan_servo.write(pan_angle);
-        //tilt_servo.write(tilt_angle);
-        
-        Serial.printf("Pan Data: %u  Pan angle: %u   Tilt Data %u   Tilt angle: %u\n",
-                pan_data,
-                pan_angle,
-                tilt_data,
-                tilt_angle);
-
+        if (pan_angle_last != pan_angle) {
+                // for 16b fiture
+                pan_servo.writeMicroseconds(pan_angle);
+                pan_angle_last = pan_angle;
+                tilt_servo.writeMicroseconds(tilt_angle);
+                
+                // for 8 bit fixture
+                //pan_servo.write(pan_angle);
+                //tilt_servo.write(tilt_angle);
+                
+                Serial.printf("Pan Data: %u  Pan angle: %u   Tilt Data %u   Tilt angle: %u\n",
+                        pan_data,
+                        pan_angle,
+                        tilt_data,
+                        tilt_angle);
+                delayMicroseconds(20);
+                }
+        else
+        {
+                printf("\n");
         }
+        
+        
+        
+
+     }
 }

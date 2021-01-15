@@ -22,11 +22,16 @@
 #include <E131.h>
 #include <Servo.h>
 
-const char ssid[] = "Street_Cam1";         /* Replace with your SSID */
-const char passphrase[] = "1sthouse";   /* Replace with your WPA2 passphrase */
+const char ssid[] = "------";         /* Replace with your SSID */
+const char passphrase[] = "-------";   /* Replace with your WPA2 passphrase */
+
+int pan_data;
+int pan_angle;
+int tilt_data;
+int tilt_angle;
 
 Servo pan_servo;
-
+Servo tilt_servo;
 
 E131 e131;
 
@@ -40,6 +45,9 @@ void setup() {
 
     pan_servo.attach(5);
     pan_servo.write(90);
+    tilt_servo.attach(4);
+    tilt_servo.write(90);
+
 }
 
 void loop() {
@@ -55,12 +63,21 @@ void loop() {
                 e131.stats.packet_errors,   // Packet error counter
                 e131.data[0],              // Dimmer data for Channel 1
                 e131.data[1],              // Dimmer data for Channel 2
-                e131.data[2]),              // Dimmer data for Channel 3
-        Serial.printf("Data: %u - angle: %f\n",
-                e131.data[0],
-                e131.data[0]/1.991),
+                e131.data[2]);              // Dimmer data for Channel 3
         
-        pan_servo.write(e131.data[0]/2);
-        //delay(200)
+        pan_data = e131.data[0];
+        tilt_data = e131.data[1];
+        
+        pan_angle = map(pan_data,0,255,0,180);
+        tilt_angle = map(tilt_data,0,255,0,180);
+        pan_servo.write(pan_angle);
+        tilt_servo.write(tilt_angle);
+        
+        Serial.printf("Pan Data: %u  Pan angle: %u   Tilt Data %u   Tilt angle: %u\n",
+                pan_data,
+                pan_angle,
+                tilt_data,
+                tilt_angle);
+
         }
 }

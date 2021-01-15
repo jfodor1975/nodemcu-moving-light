@@ -22,14 +22,16 @@
 #include <E131.h>
 #include <Servo.h>
 
-const char ssid[] = "-------";         /* Replace with your SSID */
+
+
+const char ssid[] = "--------";         /* Replace with your SSID */
 const char passphrase[] = "-------";   /* Replace with your WPA2 passphrase */
 
 // pan variables
 int pan_data;
 int pan_data1;
 int pan_data2;
-int pan116b;
+int pan16b;
 int pan_angle;
 
 // tilt variables
@@ -53,9 +55,9 @@ void setup() {
     e131.beginMulticast(ssid, passphrase, 1); /* via Multicast for Universe 1 */
     
 
-    pan_servo.attach(5);
+    pan_servo.attach(5);  // nodemcu D1 output
     pan_servo.write(90);
-    tilt_servo.attach(4);
+    tilt_servo.attach(4); // nodemcu D2 output
     tilt_servo.write(90);
 
 }
@@ -66,7 +68,7 @@ void loop() {
     
     /* Process channel data if we have it, and print it in the serial monitor*/
     if (num_channels) {
-        Serial.printf("Universe %u / %u Channels | Packet#: %u / Errors: %u / CH1: %u CH2: %u  CH3: %u  CH4: %u  CH5: %u\n",
+        Serial.printf("Universe %u / %u Channels | Packet#: %u / Errors: %u / CH1: %u CH2: %u  CH3: %u  CH4: %u  CH5: %u :",
                 e131.universe,              // The Universe for this packet
                 num_channels,               // Number of channels in this packet
                 e131.stats.num_packets,     // Packet counter

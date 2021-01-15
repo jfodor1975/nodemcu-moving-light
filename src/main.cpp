@@ -23,9 +23,11 @@
 #include <Servo.h>
 #include <Wifi.h> // wifi information 
 
+/*
+wifi infromation can be set in the wifi.h file
+*/
 
-
-
+// moved to Wifi.h file
 //const char ssid[] = "--------";         /* Replace with your SSID */
 //const char passphrase[] = "-------";   /* Replace with your WPA2 passphrase */
 

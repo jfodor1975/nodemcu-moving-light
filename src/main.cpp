@@ -21,6 +21,7 @@
 #include <ESP8266WiFi.h>
 #include <E131.h>
 #include <Servo.h>
+#include <Wifi.h> // wifi information 
 
 
 

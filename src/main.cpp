@@ -1,27 +1,63 @@
 /*
-* ESP8266_Test.ino - Simple sketch to listen for E1.31 data on an ESP8266 
-*                    and print some statistics.
+* Moving light code
 *
-* Project: E131 - E.131 (sACN) library for Arduino
-* Copyright (c) 2015 Shelby Merrick
-* http://www.forkineye.com
-*
-*  This program is provided free for you to use in any way that you wish,
-*  subject to the laws and regulations where you are using it.  Due diligence
-*  is strongly suggested before using this code.  Please give credit where due.
-*
-*  The Author makes no warranty of any kind, express or implied, with regard
-*  to this program or the documentation contained in this document.  The
-*  Author shall not be liable in any event for incidental or consequential
-*  damages in connection with, or arising out of, the furnishing, performance
-*  or use of these programs.
-*
+
+Node MCU pins
+
+D1 = pan servo signal
+D2 = tilt servo signal
+D4 = WS2812B data
+
+
+Channel mapping
+| Channel |   Function  | 
+|    1    | Pan 8 bit   |
+|    2    | Pan 16 bit  |
+|    3    | Tilt 8 bit  |
+|    4    | Tilt 16 bit |
+|    5    | Led 1 Red   |
+|    6    | Led 1 Green |
+|    7    | Led 1 Blue  |
+|    8    | Led 2 Red   |
+|    9    | Led 2 Green |
+|    10   | Led 2 Blue  |
+|    11   | Led 3 Red   |
+|    12   | Led 3 Green |
+|    13   | Led 3 Blue  |
+|    14   | Led 4 Red   |
+|    15   | Led 4 Green |
+|    16   | Led 4 Blue  |
+|    17   | Led 5 Red   |
+|    18   | Led 5 Green |
+|    19   | Led 5 Blue  |
+|    20   | Led 6 Red   |
+|    21   | Led 6 Green |
+|    22   | Led 6 Blue  |
+|    23   | Led 7 Red   |
+|    24   | Led 7 Green |
+|    25   | Led 7 Blue  |
+|    26   | Reset/test  |
 */
 #include <Arduino.h>
 #include <ESP8266WiFi.h>
 #include <E131.h>
 #include <Servo.h>
+#define FASTLED_ESP8266_NODEMCU_PIN_ORDER
+#define FASTLED_ALLOW_INTERRUPTS 0
+#include <FastLED.h>
 #include <Wifi.h> // wifi information 
+
+
+
+#define LED_PIN     4
+#define COLOR_ORDER GRB
+#define CHIPSET     WS2812b
+#define NUM_LEDS    7
+
+
+CRGB g_LEDs[NUM_LEDS] = {0};
+
+
 
 /*
 wifi infromation can be set in the wifi.h file
@@ -51,7 +87,13 @@ Servo tilt_servo;
 
 E131 e131;
 
+// includes for self testing
+#include <Led_test.h>
 void setup() {
+    //pinMode(LED_PIN, OUTPUT);
+    pinMode(5, OUTPUT);
+    pinMode(4, OUTPUT);
+    
     Serial.begin(115200);
     delay(10);
 
@@ -59,24 +101,31 @@ void setup() {
     //e131.begin(ssid, passphrase);               /* via Unicast on the default port */
     e131.beginMulticast(ssid, passphrase, 1); /* via Multicast for Universe 1 */
     
-
+    
+    // servo setup and test
     pan_servo.attach(5);  // nodemcu D1 output
-    pan_servo.write(90);
     tilt_servo.attach(4); // nodemcu D2 output
-    tilt_servo.write(90);
+
+    // servo test fuction
+    Servo_test();
     delay(1000);
-    pan_servo.write(0);
-    tilt_servo.write(0);
-    delay(1000);
-    pan_servo.write(180);
-    tilt_servo.write(180);
-    delay(1000);
+    // Led setup and test    
+    //FastLED.addLeds<NEOPIXEL, LED_PIN, 6>(g_LEDs, NUM_LEDS);               // Add our LED strip to the FastLED library
+    //FastLED.addLeds<WS2812B, 2, GRB>(g_LEDs, NUM_LEDS);
+    FastLED.addLeds<WS2812B, LED_PIN, GRB>(g_LEDs,NUM_LEDS);
+
+    // led self test function
+    Led_test();
+    FastLED.show();
+    
 }
 
 void loop() {
+
+     
     /* Parse a packet */
     uint16_t num_channels = e131.parsePacket();
-    
+        
     /* Process channel data if we have it, and print it in the serial monitor*/
     if (num_channels) {
         Serial.printf("Universe %u / %u Channels | Packet#: %u / Errors: %u / CH1: %u CH2: %u  CH3: %u  CH4: %u  CH5: %u :",
@@ -85,11 +134,22 @@ void loop() {
                 e131.stats.num_packets,     // Packet counter
                 e131.stats.packet_errors,   // Packet error counter
                 e131.data[0],              // pan 1 data for Channel 1 this chanel for 8bit
-                e131.data[1],              // pan 2 data for Channel 2
+                e131.data[1],              // pan 2 data for Channel 2 16b Pan
                 e131.data[2],              // tilt 1 data for Channel 3 this chanel for 8bit
-                e131.data[3],              // tilt 2 data for Channel 4
+                e131.data[3],              // tilt 2 data for Channel 4 16bit tilt
                 e131.data[4]);              // intenisty data for Channel 5
         
+        // leds
+
+        g_LEDs[0].r = e131.data[4];
+        g_LEDs[0].g = e131.data[5];
+        g_LEDs[0].b = e131.data[6];
+        FastLED.setBrightness(255);
+        FastLED.show();
+
+
+
+
         // get channel datat
         pan_data1 = e131.data[0];
         pan_data2 = e131.data[1];
@@ -131,6 +191,9 @@ void loop() {
                 printf("\n");
         }
         
+
+        
+
         
         
 

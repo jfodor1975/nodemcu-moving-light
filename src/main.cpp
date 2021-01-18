@@ -89,6 +89,7 @@ E131 e131;
 
 // includes for self testing
 #include <Led_test.h>
+#include <Led_ch.h>
 void setup() {
     //pinMode(LED_PIN, OUTPUT);
     pinMode(5, OUTPUT);
@@ -117,6 +118,8 @@ void setup() {
     // led self test function
     Led_test();
     FastLED.show();
+
+    FastLED.setBrightness(255);  // set default brightness so that you can control it via RGB input vaules
     
 }
 
@@ -140,12 +143,18 @@ void loop() {
                 e131.data[4]);              // intenisty data for Channel 5
         
         // leds
+        //set_led_data();
 
-        g_LEDs[0].r = e131.data[4];
-        g_LEDs[0].g = e131.data[5];
-        g_LEDs[0].b = e131.data[6];
-        FastLED.setBrightness(255);
-        FastLED.show();
+        int ch = 4;
+        //FastLED.clear(false);
+        for (int f = 0; f < NUM_LEDS; f++)
+             
+            g_LEDs[f].r = e131.data[ch],
+            g_LEDs[f].g = e131.data[ch + 1],
+            g_LEDs[f].b = e131.data[ch + 2],
+            ch = ch + 3;
+
+        //FastLED.show();
 
 
 
@@ -192,7 +201,7 @@ void loop() {
         }
         
 
-        
+        FastLED.show();
 
         
         

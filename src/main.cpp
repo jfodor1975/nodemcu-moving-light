@@ -56,7 +56,7 @@ codeing Notes:
 #include <E131.h>
 #include <Servo.h>
 #define FASTLED_ESP8266_NODEMCU_PIN_ORDER
-//#define FASTLED_ALLOW_INTERRUPTS 0
+#define FASTLED_ALLOW_INTERRUPTS 0
 #include <FastLED.h>
 #include <Wifi.h> // wifi information 
 

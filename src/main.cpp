@@ -37,13 +37,26 @@ Channel mapping
 |    24   | Led 7 Green |
 |    25   | Led 7 Blue  |
 |    26   | Reset/test  |
+
+
+codeing Notes:
+- commented out #define FASTLED_ALLOW_INTERRUPTS 0 to try to remove random colour flicker
+- added 20us delay at the end of the main loop to try and remove random flicker
+- added FastLED.setDither(0); to combat random led flashing while at 255 bightness.
+-nope not it: wondering if a shieled data line is needed for the led data to remove flicker. so far this might be the answer 
+        as cross talk between the servo data lines might have interfered with the led data line in bread board testing.
+- might need a resitor on the led data line
+
+
+
+
 */
 #include <Arduino.h>
 #include <ESP8266WiFi.h>
 #include <E131.h>
 #include <Servo.h>
 #define FASTLED_ESP8266_NODEMCU_PIN_ORDER
-#define FASTLED_ALLOW_INTERRUPTS 0
+//#define FASTLED_ALLOW_INTERRUPTS 0
 #include <FastLED.h>
 #include <Wifi.h> // wifi information 
 
@@ -118,7 +131,7 @@ void setup() {
     // led self test function
     Led_test();
     FastLED.show();
-
+    FastLED.setDither(0);    
     FastLED.setBrightness(255);  // set default brightness so that you can control it via RGB input vaules
     
 }
@@ -202,6 +215,7 @@ void loop() {
         
 
         FastLED.show();
+        delay(20);
 
         
         

@@ -6,7 +6,7 @@ Node MCU pins
 
 D1 = pan servo signal
 D2 = tilt servo signal
-D4 = WS2812B data
+D6 = WS2812B data
 
 
 Channel mapping
@@ -68,6 +68,7 @@ codeing Notes:
 #define COLOR_ORDER GRB
 #define CHIPSET     WS2812b
 #define NUM_LEDS    7
+Adafruit_NeoPixel pixels(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ400);
 
 
 //CRGB g_LEDs[NUM_LEDS] = {0};
@@ -134,7 +135,7 @@ void setup() {
     //FastLED.addLeds<WS2812B, LED_PIN, GRB>(g_LEDs,NUM_LEDS);  // this sort of worked
 
     // neopixel startup
-    Adafruit_NeoPixel pixels(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800);
+    
     pixels.begin(); // INITIALIZE NeoPixel strip object (REQUIRED)
     pixels.clear();
     // led self test function
@@ -147,31 +148,51 @@ void setup() {
 }
 
 void loop() {
-
+    
+      
      
     /* Parse a packet */
     uint16_t num_channels = e131.parsePacket();
         
     /* Process channel data if we have it, and print it in the serial monitor*/
     if (num_channels) {
-        //Serial.printf("Universe %u / %u Channels | Packet#: %u / Errors: %u / CH1: %u CH2: %u  CH3: %u  CH4: %u  CH5: %u :",
-        //        e131.universe,              // The Universe for this packet
-        //        num_channels,               // Number of channels in this packet
-        //        e131.stats.num_packets,     // Packet counter
-        //        e131.stats.packet_errors,   // Packet error counter
-        //        e131.data[0],              // pan 1 data for Channel 1 this chanel for 8bit
-        //        e131.data[1],              // pan 2 data for Channel 2 16b Pan
-        //        e131.data[2],              // tilt 1 data for Channel 3 this chanel for 8bit
-        //        e131.data[3],              // tilt 2 data for Channel 4 16bit tilt
-        //        e131.data[4]);              // intenisty data for Channel 5
+        Serial.printf("Num_channels: %u  Packet#: %u  CH1: %u CH2: %u  CH3: %u  CH4: %u LED: CH5: %u  CH6: %u  CH7: %u  CH8: %u  CH9: %u  CH10: %u  CH11: %u  CH12: %u  CH13: %u  CH14: %u  CH15: %u  CH16: %u  CH17: %u  CH18: %u  CH19: %u  CH20: %u  CH21: %u  CH22: %u  CH23: %u  CH24: %u  CH25: %u  CH26: %u :",
+                //e131.universe,              // The Universe for this packet
+                num_channels,               // Number of channels in this packet
+                e131.stats.num_packets,     // Packet counter
+                //e131.stats.packet_errors,   // Packet error counter
+                e131.data[0],              // pan 1 data for Channel 1 this chanel for 8bit
+                e131.data[1],              // pan 2 data for Channel 2 16b Pan
+                e131.data[2],              // tilt 1 data for Channel 3 this chanel for 8bit
+                e131.data[3],              // tilt 2 data for Channel 4 16bit tilt
+                e131.data[4],e131.data[5],e131.data[6],     // LED 1 RGB Data
+                e131.data[7],e131.data[8],e131.data[9],     // LED 2 RGB Data
+                e131.data[10],e131.data[11],e131.data[12],  // LED 3 RGB Data
+                e131.data[13],e131.data[14],e131.data[15],  // LED 4 RGB Data
+                e131.data[16],e131.data[17],e131.data[18],  // LED 5 RGB Data
+                e131.data[19],e131.data[20],e131.data[21],  // LED 6 RGB Data
+                e131.data[22],e131.data[23],e131.data[24],  // LED 7 RGB Data
+                e131.data[25]);                             // Function Data
+                      
         
-        // leds
-        //set_led_data();
+        // Fast Led Code
+        set_led_data();
 /*
+        int ch = 4;
+        
+        for (int f = 0; f < NUM_LEDS; f++)
+            pixels.setPixelColor(f, pixels.Color(0, 255, 0)),
+            //pixels.setPixelColor(f, pixels.Color(e131.data[ch], e131.data[ch + 1], e131.data[ch + 2])), 
+            ch = ch + 3;
+
+        pixels.show();
+*/        
+/*
+        //FastLED.clear(false);
         int ch = 4;
         //FastLED.clear(false);
         for (int f = 0; f < NUM_LEDS; f++)
-             
+            pixels.setPixelColor(i, pixels.Color(0, 0, 255)), 
             g_LEDs[f].r = e131.data[ch],
             g_LEDs[f].g = e131.data[ch + 1],
             g_LEDs[f].b = e131.data[ch + 2],
@@ -182,51 +203,52 @@ void loop() {
 */
 
 
+// commented out for led testing
 
-//        // get channel datat
-//        pan_data1 = e131.data[0];
-//        pan_data2 = e131.data[1];
-//        tilt_data1 = e131.data[2];
-//        tilt_data2 = e131.data[3];
-//                       
-//        // 16 bit math 
-//        pan_data = (pan_data1 *256) + pan_data2;
-//        tilt_data = (tilt_data1 * 256) + tilt_data2;
-//
-//
-//        // 8b angle
-//        //pan_angle = map(pan_data1,0,255,0,180);
-//        //tilt_angle = map(tilt_data1,0,255,0,180);
-//
-//        // 16b angle
-//        pan_angle = map(pan_data,0,65025,550,2330);
-//       tilt_angle = map(tilt_data,0,65025,550,2330);
-//        
-//        if (pan_angle_last != pan_angle) {
-//                // for 16b fiture
-//                pan_servo.writeMicroseconds(pan_angle);
-//               pan_angle_last = pan_angle;
-//                tilt_servo.writeMicroseconds(tilt_angle);
-//                
-//                // for 8 bit fixture
-//                //pan_servo.write(pan_angle);
-//                //tilt_servo.write(tilt_angle);
-//                
-//                Serial.printf("Pan Data: %u  Pan angle: %u   Tilt Data %u   Tilt angle: %u\n",
-//                        pan_data,
-//                        pan_angle,
-//                        tilt_data,
-//                        tilt_angle);
-//                delayMicroseconds(20);
-//                }
-//        else
-//        {
-//                printf("\n");
-//        }
+        // get Pan/Tilt channel datat
+        pan_data1 = e131.data[0];
+        pan_data2 = e131.data[1];
+        tilt_data1 = e131.data[2];
+        tilt_data2 = e131.data[3];
+                       
+        // 16 bit math 
+        pan_data = (pan_data1 *256) + pan_data2;
+        tilt_data = (tilt_data1 * 256) + tilt_data2;
+
+
+        // 8b angle
+        //pan_angle = map(pan_data1,0,255,0,180);
+        //tilt_angle = map(tilt_data1,0,255,0,180);
+
+        // 16b angle
+        pan_angle = map(pan_data,0,65025,550,2330);
+        tilt_angle = map(tilt_data,0,65025,550,2330);
+        
+        if (pan_angle_last != pan_angle) {
+                // for 16b fiture
+                pan_servo.writeMicroseconds(pan_angle);
+               pan_angle_last = pan_angle;
+                tilt_servo.writeMicroseconds(tilt_angle);
+                
+                // for 8 bit fixture
+                //pan_servo.write(pan_angle);
+                //tilt_servo.write(tilt_angle);
+                
+               Serial.printf("Pan Data: %u  Pan angle: %u   Tilt Data %u   Tilt angle: %u\n",
+                        pan_data,
+                        pan_angle,
+                        tilt_data,
+                        tilt_angle);
+                delayMicroseconds(20);
+                }
+        else
+        {
+                printf("\n");
+        }
         
 
         
-        //delay(100);
+        delay(20);
 
         
         

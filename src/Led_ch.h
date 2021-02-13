@@ -1,9 +1,9 @@
 #include <Arduino.h>
 //#define FASTLED_ESP8266_NODEMCU_PIN_ORDER
 //#define FASTLED_ALLOW_INTERRUPTS 0
-#include <FastLED.h>
+//#include <FastLED.h>
 
-
+/*
 void set_led_data()
 {
 
@@ -18,3 +18,5 @@ for (int f = 0; f < NUM_LEDS; f++)
 
 //FastLED.show();
 }
+
+*/

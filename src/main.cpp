@@ -103,6 +103,9 @@ Servo tilt_servo;
 
 E131 e131;
 
+int counter = 0;
+
+
 // includes for self testing
 #include <Led_test.h>
 #include <Led_ch.h>
@@ -156,6 +159,8 @@ void loop() {
         
     /* Process channel data if we have it, and print it in the serial monitor*/
     if (num_channels) {
+        
+/*        
         Serial.printf("Num_channels: %u  Packet#: %u  CH1: %u CH2: %u  CH3: %u  CH4: %u LED: CH5: %u  CH6: %u  CH7: %u  CH8: %u  CH9: %u  CH10: %u  CH11: %u  CH12: %u  CH13: %u  CH14: %u  CH15: %u  CH16: %u  CH17: %u  CH18: %u  CH19: %u  CH20: %u  CH21: %u  CH22: %u  CH23: %u  CH24: %u  CH25: %u  CH26: %u :",
                 //e131.universe,              // The Universe for this packet
                 num_channels,               // Number of channels in this packet
@@ -173,10 +178,25 @@ void loop() {
                 e131.data[19],e131.data[20],e131.data[21],  // LED 6 RGB Data
                 e131.data[22],e131.data[23],e131.data[24],  // LED 7 RGB Data
                 e131.data[25]);                             // Function Data
-                      
+ */                     
         
-        // Fast Led Code
-        set_led_data();
+        //  Led Code call on every other packet
+        Serial.printf("Counter: %u", counter);
+        
+        if (counter == 0) 
+        {
+                Serial.printf("calling LED Data");
+                set_led_data();
+                counter++;
+        } 
+        else if (counter == 1) 
+        {
+                Serial.printf("Reseting counter");
+                counter--;
+        }      
+
+                
+        //set_led_data();
 /*
         int ch = 4;
         

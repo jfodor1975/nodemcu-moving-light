@@ -1,7 +1,6 @@
 /*
- Moving light code
- version 0.0.3
- 
+* Moving light code
+*
 
 Node MCU pins
 
@@ -9,7 +8,6 @@ D1 = pan servo signal
 D2 = tilt servo signal
 D6 = WS2812B data
 
-7 pixels led board.
 
 Channel mapping
 | Channel |   Function  | 

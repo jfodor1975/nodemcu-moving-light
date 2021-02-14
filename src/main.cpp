@@ -58,10 +58,6 @@ codeing Notes:
 #include <E131.h>
 #include <Servo.h>
 #include <Adafruit_NeoPixel.h>
-//#define FASTLED_ESP8266_NODEMCU_PIN_ORDER
-//#define FASTLED_ALLOW_INTERRUPTS 0
-//#define FASTLED_INTERRUPT_RETRY_COUNT 1
-//#include <FastLED.h>
 #include <Wifi.h> // wifi information 
 
 
@@ -71,10 +67,6 @@ codeing Notes:
 #define CHIPSET     WS2812b
 #define NUM_LEDS    7
 Adafruit_NeoPixel pixels(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ400);
-
-
-//CRGB g_LEDs[NUM_LEDS] = {0};
-
 
 
 /*
@@ -112,7 +104,6 @@ int counter = 0;
 #include <Led_test.h>
 #include <Led_ch.h>
 void setup() {
-    //pinMode(LED_PIN, OUTPUT);
     pinMode(5, OUTPUT);
     pinMode(4, OUTPUT);
     
@@ -133,22 +124,12 @@ void setup() {
     delay(500);  // commented out for LED testing
 
 
-
-    // Led setup and test    
-    //FastLED.addLeds<NEOPIXEL, LED_PIN, 6>(g_LEDs, NUM_LEDS);               // Add our LED strip to the FastLED library
-    //FastLED.addLeds<WS2812B, 2, GRB>(g_LEDs, NUM_LEDS);
-    //FastLED.addLeds<WS2812B, LED_PIN, GRB>(g_LEDs,NUM_LEDS);  // this sort of worked
-
     // neopixel startup
     
     pixels.begin(); // INITIALIZE NeoPixel strip object (REQUIRED)
     pixels.clear();
     // led self test function
     Led_test();
-    //pixels.clear();
-    //FastLED.show();
-    //FastLED.setDither(0);    
-    //FastLED.setBrightness(255);  // set default brightness so that you can control it via RGB input vaules
     
 }
 
@@ -162,7 +143,8 @@ void loop() {
     /* Process channel data if we have it, and print it in the serial monitor*/
     if (num_channels) {
         
-/*        
+/*      // debug information via the serial console
+
         Serial.printf("Num_channels: %u  Packet#: %u  CH1: %u CH2: %u  CH3: %u  CH4: %u LED: CH5: %u  CH6: %u  CH7: %u  CH8: %u  CH9: %u  CH10: %u  CH11: %u  CH12: %u  CH13: %u  CH14: %u  CH15: %u  CH16: %u  CH17: %u  CH18: %u  CH19: %u  CH20: %u  CH21: %u  CH22: %u  CH23: %u  CH24: %u  CH25: %u  CH26: %u :",
                 //e131.universe,              // The Universe for this packet
                 num_channels,               // Number of channels in this packet
@@ -187,45 +169,15 @@ void loop() {
         
         if (counter == 0) 
         {
-                Serial.printf("calling LED Data");
-                set_led_data();
+                //Serial.printf("calling LED Data");  // for debuging
+                set_led_data();  // calling LED fuction to set the led colours per pixel
                 counter++;
         } 
         else if (counter == 1) 
         {
-                Serial.printf("Reseting counter");
+                //Serial.printf("Reseting counter");  // for debuging
                 counter--;
         }      
-
-                
-        //set_led_data();
-/*
-        int ch = 4;
-        
-        for (int f = 0; f < NUM_LEDS; f++)
-            pixels.setPixelColor(f, pixels.Color(0, 255, 0)),
-            //pixels.setPixelColor(f, pixels.Color(e131.data[ch], e131.data[ch + 1], e131.data[ch + 2])), 
-            ch = ch + 3;
-
-        pixels.show();
-*/        
-/*
-        //FastLED.clear(false);
-        int ch = 4;
-        //FastLED.clear(false);
-        for (int f = 0; f < NUM_LEDS; f++)
-            pixels.setPixelColor(i, pixels.Color(0, 0, 255)), 
-            g_LEDs[f].r = e131.data[ch],
-            g_LEDs[f].g = e131.data[ch + 1],
-            g_LEDs[f].b = e131.data[ch + 2],
-            ch = ch + 3;
-
-        FastLED.show();
-        delayMicroseconds(20);
-*/
-
-
-// commented out for led testing
 
         // get Pan/Tilt channel datat
         pan_data1 = e131.data[0];

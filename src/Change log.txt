@@ -1,0 +1,7 @@
+Version 0.0.2
+- moved to neopixel library
+- changing led's on every second E131 packet. seems to reduce flicker but not get rid of it. 
+- using 400khz timing on led helps with flicker
+
+version 0.0.3
+- removed fastled code

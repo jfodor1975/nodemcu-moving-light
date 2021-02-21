@@ -48,11 +48,9 @@ codeing Notes:
 -nope not it: wondering if a shieled data line is needed for the led data to remove flicker. so far this might be the answer 
         as cross talk between the servo data lines might have interfered with the led data line in bread board testing.
 - might need a resitor on the led data line
-
-
-
-
 */
+
+
 #include <Arduino.h>
 #include <ESP8266WiFi.h>
 #include <E131.h>
@@ -60,8 +58,13 @@ codeing Notes:
 #include <Adafruit_NeoPixel.h>
 #include <Wifi.h> // wifi information 
 
+// wifimanager includes
+#include <DNSServer.h>
+#include <ESP8266WebServer.h>
+#include <WiFiManager.h> 
 
 
+// led defines
 #define LED_PIN     D6
 #define COLOR_ORDER GRB
 #define CHIPSET     WS2812b
@@ -72,6 +75,9 @@ Adafruit_NeoPixel pixels(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ400);
 /*
 wifi infromation can be set in the wifi.h file
 */
+WiFiServer server(80);
+String header;
+
 
 // moved to Wifi.h file
 //const char ssid[] = "--------";         /* Replace with your SSID */
@@ -100,7 +106,7 @@ E131 e131;
 int counter = 0;
 
 
-// includes for self testing
+// my includes for sanity
 #include <Led_test.h>
 #include <Led_ch.h>
 void setup() {
@@ -112,8 +118,31 @@ void setup() {
 
     /* Choose one to begin listening for E1.31 data */
     //e131.begin(ssid, passphrase);               /* via Unicast on the default port */
-    e131.beginMulticast(ssid, passphrase, 1); /* via Multicast for Universe 1 */
+    //e131.beginMulticast(ssid, passphrase, 1); /* via Multicast for Universe 1 */
     
+    // WiFiManager
+   // Local intialization. Once its business is done, there is no need to keep it around
+   WiFiManager wifiManager;
+  
+   // Uncomment and run it once, if you want to erase all the stored information 
+   //wifiManager.resetSettings();
+  
+   // set custom ip for portal
+   //wifiManager.setAPConfig(IPAddress(10,0,1,1), IPAddress(10,0,1,1), IPAddress(255,255,255,0));
+
+   // fetches ssid and pass from eeprom and tries to connect
+   // if it does not connect it starts an access point with the specified name
+   // here  "AutoConnectAP"
+   // and goes into a blocking loop awaiting configuration
+   wifiManager.autoConnect("Desk_Mover_AP");
+   // or use this for auto generated name ESP + ChipID
+   //wifiManager.autoConnect();
+  
+   // if you get here you have connected to the WiFi
+   Serial.println("Connected.");
+   Serial.println(WiFi.localIP());    
+
+
     
     // servo setup and test
     pan_servo.attach(5);  // nodemcu D1 output
@@ -131,13 +160,17 @@ void setup() {
     // led self test function
     Led_test();
     
+    e131.begin(E131_MULTICAST,1);
+
+    
+
 }
 
 void loop() {
     
       
      
-    /* Parse a packet */
+    /* Parse a E131 packet */
     uint16_t num_channels = e131.parsePacket();
         
     /* Process channel data if we have it, and print it in the serial monitor*/

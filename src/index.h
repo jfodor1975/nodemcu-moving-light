@@ -4,10 +4,20 @@ const char MAIN_page[] PROGMEM = R"=====(
 <body>
 <center>
 <h1>WiFi Desk Light</h1><br>
-Ciclk to turn <a href="Testmode">Led Test</a><br>
-Ciclk to turn <a href="PanTiltreset">Pan/Tilt Reset</a><br>
+Run a <a href="Testmode">Led Test</a><br>
+Run a <a href="PanTiltreset">Pan/Tilt Reset</a><br>
+<br>
+<h1>Universe: </h1> Clients_Response1
+<br>
 <hr>
-<a href="https://circuits4you.com">circuits4you.com</a>
+<form action="/" method="POST">
+    SACN Universe #: <input type="text" name="Universe">
+    <input type="submit" value="Submit">
+</form><br>
+<form action="/" method="POST">
+    Starting Address #: <input type="text" name="Address">
+    <input type="submit" value="Submit">
+</form><br>
 </center>
 
 </body>

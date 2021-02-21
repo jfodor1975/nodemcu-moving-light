@@ -113,31 +113,25 @@ ESP8266WebServer WebServer(80);
 #include <Led_ch.h>
 #include <index.h>
 
+// HTML request handeling
 void handleTestmode() { 
  Serial.println("LED Test Called");
- WebServer.send(200, "text/html", "Led testing in progress"); //Send ADC value only to client ajax request 
- //digitalWrite(LED,LOW); //LED is connected in reverse
+ WebServer.send(200, "text/html", Ledreset_page); //Send ADC value only to client ajax request 
  pixels.begin(); // INITIALIZE NeoPixel strip object (REQUIRED)
- pixels.clear();
- // led self test function
+ pixels.clear(); // led self test function
  Led_test();
  
 }
 
-void handleFullreset() { 
+void handlePanTiltreset() { 
  Serial.println("Reseting light");
- //digitalWrite(LED,LOW); //LED is connected in reverse
- WebServer.send(200, "text/html", "Reseting Pan/Tilt"); //Send ADC value only to client ajax request
+ WebServer.send(200, "text/html", PanTilt_page); //Send ADC value only to client ajax request
  Servo_test(); // commented out for LED testing
- //delay(500);  // commented out for LED testing
- WebServer.send(200, "text/html", "Reseting Pan/Tilt complete"); //Send ADC value only to client ajax request
 }
 
 
 void handleRoot() {
-  //String s = MAIN_page;
   WebServer.send (200, "text/html", MAIN_page);
-  //WebServer.send  (200, "text/plain", "Hello world!");   // Send HTTP status 200 (Ok) and send some text to the browser/client
 }
 
 void handleNotFound(){
@@ -206,7 +200,8 @@ void setup() {
     WebServer.on("/", handleRoot);               // Call the 'handleRoot' function when a client requests URI "/"
     WebServer.onNotFound(handleNotFound);        // When a client requests an unknown URI (i.e. something other than "/"), call function "handleNotFound"
     WebServer.on("/Testmode", handleTestmode);   // call the test mode function
-    WebServer.on("/Fullreset", handleFullreset); // call the reset function
+    WebServer.on("/PanTiltreset", handlePanTiltreset); // call the reset function
+    WebServer.on("/Mainpage", handlePanTiltreset); // goto the main page
 
     WebServer.begin();                           // Actually start the server
     Serial.println("HTTP server started");

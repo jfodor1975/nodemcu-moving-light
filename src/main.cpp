@@ -105,10 +105,47 @@ E131 e131;
 
 int counter = 0;
 
+// HTML, move to file later
+ESP8266WebServer WebServer(80);
 
 // my includes for sanity
 #include <Led_test.h>
 #include <Led_ch.h>
+#include <index.h>
+
+void handleTestmode() { 
+ Serial.println("LED Test Called");
+ WebServer.send(200, "text/html", "Led testing in progress"); //Send ADC value only to client ajax request 
+ //digitalWrite(LED,LOW); //LED is connected in reverse
+ pixels.begin(); // INITIALIZE NeoPixel strip object (REQUIRED)
+ pixels.clear();
+ // led self test function
+ Led_test();
+ 
+}
+
+void handleFullreset() { 
+ Serial.println("Reseting light");
+ //digitalWrite(LED,LOW); //LED is connected in reverse
+ WebServer.send(200, "text/html", "Reseting Pan/Tilt"); //Send ADC value only to client ajax request
+ Servo_test(); // commented out for LED testing
+ //delay(500);  // commented out for LED testing
+ WebServer.send(200, "text/html", "Reseting Pan/Tilt complete"); //Send ADC value only to client ajax request
+}
+
+
+void handleRoot() {
+  //String s = MAIN_page;
+  WebServer.send (200, "text/html", MAIN_page);
+  //WebServer.send  (200, "text/plain", "Hello world!");   // Send HTTP status 200 (Ok) and send some text to the browser/client
+}
+
+void handleNotFound(){
+  WebServer.send(404, "text/plain", "404: Not found"); // Send HTTP status 404 (Not Found) when there's no handler for the URI in the request
+}
+
+
+
 void setup() {
     pinMode(5, OUTPUT);
     pinMode(4, OUTPUT);
@@ -162,12 +199,27 @@ void setup() {
     
     e131.begin(E131_MULTICAST,1);
 
+
+    // start webserver    
     
+    
+    WebServer.on("/", handleRoot);               // Call the 'handleRoot' function when a client requests URI "/"
+    WebServer.onNotFound(handleNotFound);        // When a client requests an unknown URI (i.e. something other than "/"), call function "handleNotFound"
+    WebServer.on("/Testmode", handleTestmode);   // call the test mode function
+    WebServer.on("/Fullreset", handleFullreset); // call the reset function
+
+    WebServer.begin();                           // Actually start the server
+    Serial.println("HTTP server started");
 
 }
 
+
+
+
 void loop() {
     
+    // web server fuctions
+    WebServer.handleClient();
       
      
     /* Parse a E131 packet */

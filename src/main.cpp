@@ -63,7 +63,6 @@ codeing Notes:
 #include <ESP8266WebServer.h>
 #include <WiFiManager.h> 
 
-
 // led defines
 #define LED_PIN     D6
 #define COLOR_ORDER GRB
@@ -75,7 +74,7 @@ Adafruit_NeoPixel pixels(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ400);
 /*
 wifi infromation can be set in the wifi.h file
 */
-WiFiServer server(80);
+WiFiServer server(80); //the wifi server
 String header;
 
 
@@ -107,6 +106,7 @@ int counter = 0;
 
 // HTML, move to file later
 ESP8266WebServer WebServer(80);
+String Argument_Name, Clients_Response1, Clients_Response2;
 
 // my includes for sanity
 #include <Led_test.h>
@@ -132,8 +132,26 @@ void handlePanTiltreset() {
 
 void handleRoot() {
   WebServer.send (200, "text/html", MAIN_page);
+ if (WebServer.args() > 0 )
+ { // Arguments were received
+    for ( uint8_t i = 0; i < WebServer.args(); i++ ) {
+      Serial.print(WebServer.argName(i)); // Display the argument
+      Argument_Name = WebServer.argName(i);
+      if (WebServer.argName(i) == "Universe") {
+        Serial.print(" Universe is: ");
+        Serial.println(WebServer.arg(i));
+        Clients_Response1 = WebServer.arg(i);
+        // e.g. range_maximum = server.arg(i).toInt();   // use string.toInt()   if you wanted to convert the input to an integer number
+        // e.g. range_maximum = server.arg(i).toFloat(); // use string.toFloat() if you wanted to convert the input to a floating point number
+       } 
+       if (WebServer.argName(i) == "Address") {
+        Serial.print(" Starting Address is: ");
+        Serial.println(WebServer.arg(i));
+        Clients_Response1 = WebServer.arg(i);
+       }    
+    }
+  }
 }
-
 void handleNotFound(){
   WebServer.send(404, "text/plain", "404: Not found"); // Send HTTP status 404 (Not Found) when there's no handler for the URI in the request
 }
@@ -194,14 +212,19 @@ void setup() {
     e131.begin(E131_MULTICAST,1);
 
 
-    // start webserver    
-    
+    // start webserver and create page handelers
     
     WebServer.on("/", handleRoot);               // Call the 'handleRoot' function when a client requests URI "/"
     WebServer.onNotFound(handleNotFound);        // When a client requests an unknown URI (i.e. something other than "/"), call function "handleNotFound"
     WebServer.on("/Testmode", handleTestmode);   // call the test mode function
     WebServer.on("/PanTiltreset", handlePanTiltreset); // call the reset function
     WebServer.on("/Mainpage", handlePanTiltreset); // goto the main page
+    
+    
+
+
+
+
 
     WebServer.begin();                           // Actually start the server
     Serial.println("HTTP server started");
@@ -245,7 +268,7 @@ void loop() {
  */                     
         
         //  Led Code call on every other packet
-        Serial.printf("Counter: %u", counter);
+        //Serial.printf("Counter: %u", counter); // serial debuging check for skipping e131 packets
         
         if (counter == 0) 
         {

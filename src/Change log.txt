@@ -5,3 +5,6 @@ Version 0.0.2
 
 version 0.0.3
 - removed fastled code
+
+Version 0.0.4
+- changed wifimanager to hopefully get a proper webserver working

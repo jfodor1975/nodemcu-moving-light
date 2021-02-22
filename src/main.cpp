@@ -122,6 +122,11 @@ int counter = 0;
 void setup() {
     pinMode(5, OUTPUT);
     pinMode(4, OUTPUT);
+    // neopixel startup
+    
+    pixels.begin(); // INITIALIZE NeoPixel strip object (REQUIRED)
+    pixels.clear();
+    
     
     Serial.begin(115200);
     delay(10);
@@ -134,8 +139,8 @@ void setup() {
 
     // wifi manager config
          AsyncWiFiManager wifiManager(&server,&dns);
-         wifiManager.resetSettings();
-
+         //wifiManager.resetSettings();
+        Wifi_LED_setup();
         wifiManager.autoConnect("Desk_light");
   
         if (!wifiManager.autoConnect("AutoConnectAP", "password")) {
@@ -163,10 +168,7 @@ void setup() {
     delay(500);  // commented out for LED testing
 
 
-    // neopixel startup
-    
-    pixels.begin(); // INITIALIZE NeoPixel strip object (REQUIRED)
-    pixels.clear();
+
     // led self test function
     Led_test();
     

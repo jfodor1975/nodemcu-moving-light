@@ -5,7 +5,7 @@
 
 void Led_test()
 {
-
+        pixels.setBrightness(50);
         
         // Cycle all thru red    
         for (int i = 0; i < NUM_LEDS; i++)
@@ -57,4 +57,24 @@ void Servo_test()
     tilt_servo.write(90);
 
 
+}
+
+void Wifi_LED_setup()
+{
+
+        
+        // Cycle all thru red  
+        pixels.setBrightness(50);  
+        for (int i = 0; i < NUM_LEDS; i++)
+              
+                pixels.setPixelColor(i, pixels.Color(255, 0, 255)),
+                pixels.show(),
+                delay(150);
+        
+        delay(500);
+        // blackout LED's
+        pixels.clear();
+        pixels.show();
+        
+        
 }

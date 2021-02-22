@@ -1,28 +1,29 @@
-//const
-char MAIN_page[] PROGMEM = R"=====(
-<!DOCTYPE html>
+const char MAIN_page[] PROGMEM = R"=====(
+ <!DOCTYPE html>
 <html>
 <body>
 <center>
 <h1>WiFi Desk Light</h1><br>
-Run a <a href="Testmode">Led Test</a><br><br>
+<h1>Run a </h1><a href="Testmode">Led Test</a><br><br>
 Run a <a href="PanTiltreset">Pan/Tilt Reset</a><br>
 <br><br>
-"<p>Name received was: " + Clients_Response1 + "</p>"
+<p>Current Universe : 
+Clients_Response1
+</p>
 <hr>
 <form action="/" method="POST">
-    SACN Universe #: <input type="text" name="Universe">
-    <input type="submit" value="Submit">
+SACN Universe #: <input type="text" name="Universe">
+<input type="submit" value="Submit">
 </form><br>
 <form action="/" method="POST">
-    Starting Address #: <input type="text" name="Address">
-    <input type="submit" value="Submit">
+Starting Address #: <input type="text" name="Address">
+<input type="submit" value="Submit">
 </form><br>
 </center>
-
 </body>
 </html>
-)=====";
+//)=====";
+
 
 const char PanTilt_page[] PROGMEM = R"=====(
 <!DOCTYPE html>

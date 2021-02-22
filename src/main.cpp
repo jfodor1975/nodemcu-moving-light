@@ -52,16 +52,23 @@ codeing Notes:
 
 
 #include <Arduino.h>
+
 #include <ESP8266WiFi.h>
+
+
+//#include <Wifi.h> // wifi information 
+
+// wifimanager includes with extra webserver for html serving
+
+//#include <ESP8266WebServer.h>
+#include <ESPAsyncWebServer.h>
+#include <ESPAsyncWiFiManager.h>
+#include <DNSServer.h>
+//#include <WiFiManager.h> 
+
 #include <E131.h>
 #include <Servo.h>
 #include <Adafruit_NeoPixel.h>
-#include <Wifi.h> // wifi information 
-
-// wifimanager includes
-#include <DNSServer.h>
-#include <ESP8266WebServer.h>
-#include <WiFiManager.h> 
 
 // led defines
 #define LED_PIN     D6
@@ -74,9 +81,8 @@ Adafruit_NeoPixel pixels(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ400);
 /*
 wifi infromation can be set in the wifi.h file
 */
-WiFiServer server(80); //the wifi server
-String header;
-
+AsyncWebServer server(80);
+DNSServer dns;
 
 // moved to Wifi.h file
 //const char ssid[] = "--------";         /* Replace with your SSID */
@@ -104,57 +110,12 @@ E131 e131;
 
 int counter = 0;
 
-// HTML, move to file later
-ESP8266WebServer WebServer(80);
-String Argument_Name, Clients_Response1, Clients_Response2;
-
 // my includes for sanity
 #include <Led_test.h>
 #include <Led_ch.h>
 #include <index.h>
 
-// HTML request handeling
-void handleTestmode() { 
- Serial.println("LED Test Called");
- WebServer.send(200, "text/html", Ledreset_page); //Send ADC value only to client ajax request 
- pixels.begin(); // INITIALIZE NeoPixel strip object (REQUIRED)
- pixels.clear(); // led self test function
- Led_test();
- 
-}
 
-void handlePanTiltreset() { 
- Serial.println("Reseting light");
- WebServer.send(200, "text/html", PanTilt_page); //Send ADC value only to client ajax request
- Servo_test(); // commented out for LED testing
-}
-
-
-void handleRoot() {
-  WebServer.send (200, "text/html", MAIN_page);
- if (WebServer.args() > 0 )
- { // Arguments were received
-    for ( uint8_t i = 0; i < WebServer.args(); i++ ) {
-      Serial.print(WebServer.argName(i)); // Display the argument
-      Argument_Name = WebServer.argName(i);
-      if (WebServer.argName(i) == "Universe") {
-        Serial.print(" Universe is: ");
-        Serial.println(WebServer.arg(i));
-        Clients_Response1 = WebServer.arg(i);
-        // e.g. range_maximum = server.arg(i).toInt();   // use string.toInt()   if you wanted to convert the input to an integer number
-        // e.g. range_maximum = server.arg(i).toFloat(); // use string.toFloat() if you wanted to convert the input to a floating point number
-       } 
-       if (WebServer.argName(i) == "Address") {
-        Serial.print(" Starting Address is: ");
-        Serial.println(WebServer.arg(i));
-        Clients_Response1 = WebServer.arg(i);
-       }    
-    }
-  }
-}
-void handleNotFound(){
-  WebServer.send(404, "text/plain", "404: Not found"); // Send HTTP status 404 (Not Found) when there's no handler for the URI in the request
-}
 
 
 
@@ -164,29 +125,29 @@ void setup() {
     
     Serial.begin(115200);
     delay(10);
+    
 
     /* Choose one to begin listening for E1.31 data */
     //e131.begin(ssid, passphrase);               /* via Unicast on the default port */
     //e131.beginMulticast(ssid, passphrase, 1); /* via Multicast for Universe 1 */
     
-    // WiFiManager
-   // Local intialization. Once its business is done, there is no need to keep it around
-   WiFiManager wifiManager;
-  
-   // Uncomment and run it once, if you want to erase all the stored information 
-   //wifiManager.resetSettings();
-  
-   // set custom ip for portal
-   //wifiManager.setAPConfig(IPAddress(10,0,1,1), IPAddress(10,0,1,1), IPAddress(255,255,255,0));
 
-   // fetches ssid and pass from eeprom and tries to connect
-   // if it does not connect it starts an access point with the specified name
-   // here  "AutoConnectAP"
-   // and goes into a blocking loop awaiting configuration
-   wifiManager.autoConnect("Desk_Mover_AP");
-   // or use this for auto generated name ESP + ChipID
-   //wifiManager.autoConnect();
+    // wifi manager config
+         AsyncWiFiManager wifiManager(&server,&dns);
+         wifiManager.resetSettings();
+
+        wifiManager.autoConnect("Desk_light");
   
+        if (!wifiManager.autoConnect("AutoConnectAP", "password")) {
+                Serial.println("failed to connect, we should reset as see if it connects");
+                delay(3000);
+                ESP.reset();
+                delay(5000);
+  }
+
+
+
+
    // if you get here you have connected to the WiFi
    Serial.println("Connected.");
    Serial.println(WiFi.localIP());    
@@ -211,24 +172,6 @@ void setup() {
     
     e131.begin(E131_MULTICAST,1);
 
-
-    // start webserver and create page handelers
-    
-    WebServer.on("/", handleRoot);               // Call the 'handleRoot' function when a client requests URI "/"
-    WebServer.onNotFound(handleNotFound);        // When a client requests an unknown URI (i.e. something other than "/"), call function "handleNotFound"
-    WebServer.on("/Testmode", handleTestmode);   // call the test mode function
-    WebServer.on("/PanTiltreset", handlePanTiltreset); // call the reset function
-    WebServer.on("/Mainpage", handlePanTiltreset); // goto the main page
-    
-    
-
-
-
-
-
-    WebServer.begin();                           // Actually start the server
-    Serial.println("HTTP server started");
-
 }
 
 
@@ -236,9 +179,7 @@ void setup() {
 
 void loop() {
     
-    // web server fuctions
-    WebServer.handleClient();
-      
+     
      
     /* Parse a E131 packet */
     uint16_t num_channels = e131.parsePacket();

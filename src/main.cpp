@@ -60,11 +60,11 @@ codeing Notes:
 
 // wifimanager includes with extra webserver for html serving
 
-//#include <ESP8266WebServer.h>
-#include <ESPAsyncWebServer.h>
-#include <ESPAsyncWiFiManager.h>
+#include <ESP8266WebServer.h>
+//#include <ESPAsyncWebServer.h>
+//#include <ESPAsyncWiFiManager.h>
 #include <DNSServer.h>
-//#include <WiFiManager.h> 
+#include <WiFiManager.h> 
 
 #include <E131.h>
 #include <Servo.h>
@@ -81,8 +81,13 @@ Adafruit_NeoPixel pixels(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ400);
 /*
 wifi infromation can be set in the wifi.h file
 */
-AsyncWebServer server(80);
-DNSServer dns;
+WiFiServer server(80); // wifimanager server
+String header;
+// HTML, move to file later
+ESP8266WebServer WebServer(80); // my server for pages
+
+//AsyncWebServer server(80);
+//DNSServer dns;
 
 // moved to Wifi.h file
 //const char ssid[] = "--------";         /* Replace with your SSID */
@@ -106,16 +111,46 @@ int tilt_angle;
 Servo pan_servo;
 Servo tilt_servo;
 
+int Uni;
+int Add;
+
 E131 e131;
 
 int counter = 0;
+
+
 
 // my includes for sanity
 #include <Led_test.h>
 #include <Led_ch.h>
 #include <index.h>
 
+//************ HTML request handeling
+void handleTestmode() { 
+ Serial.println("LED Test Called");
+ WebServer.send(200, "text/html", Ledreset_page); //Send ADC value only to client ajax request 
+ pixels.begin(); // INITIALIZE NeoPixel strip object (REQUIRED)
+ pixels.clear(); // led self test function
+ Led_test();
+ 
+}
 
+void handlePanTiltreset() { 
+ Serial.println("Reseting light");
+ WebServer.send(200, "text/html", PanTilt_page); //Send ADC value only to client ajax request
+ Servo_test(); // commented out for LED testing
+}
+
+
+void handleRoot() {
+  Uni = 1;
+  Add = 32;
+  WebServer.send (200, "text/html", SendHTML(Uni,Add));
+}
+
+void handleNotFound(){
+  WebServer.send(404, "text/plain", "404: Not found"); // Send HTTP status 404 (Not Found) when there's no handler for the URI in the request
+}
 
 
 
@@ -136,14 +171,37 @@ void setup() {
     //e131.begin(ssid, passphrase);               /* via Unicast on the default port */
     //e131.beginMulticast(ssid, passphrase, 1); /* via Multicast for Universe 1 */
     
+// WiFiManager
+   // Local intialization. Once its business is done, there is no need to keep it around
+   WiFiManager wifiManager;
+  
+   // Uncomment and run it once, if you want to erase all the stored information 
+   //wifiManager.resetSettings();
+  
+   // set custom ip for portal
+   //wifiManager.setAPConfig(IPAddress(10,0,1,1), IPAddress(10,0,1,1), IPAddress(255,255,255,0));
+
+   // fetches ssid and pass from eeprom and tries to connect
+   // if it does not connect it starts an access point with the specified name
+   // here  "AutoConnectAP"
+   // and goes into a blocking loop awaiting configuration
+   wifiManager.autoConnect("Desk_Mover_AP");
+   // or use this for auto generated name ESP + ChipID
+   //wifiManager.autoConnect();
+  
+   // if you get here you have connected to the WiFi
+   Serial.println("Connected.");
+   Serial.println(WiFi.localIP());
+
+/*  asycnwifimanager code  proably not going to use this
 
     // wifi manager config
          AsyncWiFiManager wifiManager(&server,&dns);
-         //wifiManager.resetSettings();
+         wifiManager.resetSettings();
         Wifi_LED_setup();
-        wifiManager.autoConnect("Desk_light");
+        //wifiManager.autoConnect("Desk_light");
   
-        if (!wifiManager.autoConnect("AutoConnectAP", "password")) {
+        if (!wifiManager.autoConnect("Desk_light")) {
                 Serial.println("failed to connect, we should reset as see if it connects");
                 delay(3000);
                 ESP.reset();
@@ -157,7 +215,7 @@ void setup() {
    Serial.println("Connected.");
    Serial.println(WiFi.localIP());    
 
-
+*/
     
     // servo setup and test
     pan_servo.attach(5);  // nodemcu D1 output
@@ -172,7 +230,23 @@ void setup() {
     // led self test function
     Led_test();
     
+
+    // start reciving DMX on univers 1
     e131.begin(E131_MULTICAST,1);
+
+// start webserver    
+    
+    
+    WebServer.on("/", handleRoot);               // Call the 'handleRoot' function when a client requests URI "/"
+    WebServer.onNotFound(handleNotFound);        // When a client requests an unknown URI (i.e. something other than "/"), call function "handleNotFound"
+    WebServer.on("/Testmode", handleTestmode);   // call the test mode function
+    WebServer.on("/PanTiltreset", handlePanTiltreset); // call the reset function
+    WebServer.on("/Mainpage", handlePanTiltreset); // goto the main page
+
+    WebServer.begin();                           // Actually start the server
+    Serial.println("HTTP server started");
+
+
 
 }
 
@@ -180,7 +254,8 @@ void setup() {
 
 
 void loop() {
-    
+    //websever code
+    WebServer.handleClient();    
      
      
     /* Parse a E131 packet */

@@ -145,12 +145,8 @@ void handlePanTiltreset() {
 
 
 void handleRoot() {
-//  Uni = 1;
-//  Add = 32;
-  WebServer.send (200, "text/html", SendHTML(Uni,Add));
 
-
-  
+   
   if (WebServer.args() > 0 )
  { // Arguments were received
     for ( uint8_t i = 0; i < WebServer.args(); i++ ) {
@@ -162,6 +158,10 @@ void handleRoot() {
         Univers_Response = WebServer.arg(i).toInt();
         Uni = Univers_Response;
         Serial.println(Uni);
+              
+        WebServer.send (200, "text/html", Confirm_Changes_HTML(Uni,Add));
+        delay(1000);
+        ESP.restart();
         // e.g. range_maximum = server.arg(i).toInt();   // use string.toInt()   if you wanted to convert the input to an integer number
         // e.g. range_maximum = server.arg(i).toFloat(); // use string.toFloat() if you wanted to convert the input to a floating point number
        } 
@@ -169,9 +169,12 @@ void handleRoot() {
         Serial.print(" Starting Address is: ");
         Serial.println(WebServer.arg(i));
         Address_Response = WebServer.arg(i).toInt();
+        Add = Address_Response;
+        WebServer.send (200, "text/html", Confirm_Changes_HTML(Uni,Add));
        }    
     }
   }
+  WebServer.send (200, "text/html", SendHTML(Uni,Add));
   
 }
 
@@ -260,6 +263,7 @@ void setup() {
 
     // start reciving DMX on univers 1
     e131.begin(E131_MULTICAST,Uni);
+    
 
 // start webserver    
     

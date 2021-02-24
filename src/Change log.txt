@@ -11,6 +11,10 @@ Version 0.0.4
 - not done in this version added Wifi startup feed back, puple ring of led's before it tries to conect
 - rebuilding main webpage
 
+Version 0.0.5
+- rebuilt the webpage now reads and sends the univers and address corectly
+- note: wifi LED check has been removed, add back in later
+
 
 things to do:
 - make a diffrent pattern for wifi check

@@ -1,27 +1,26 @@
 String SendHTML(int universe, int address){ //float TemperatureWeb,float HumidityWeb, String TimeWeb,String DateWeb){
   String ptr = "<!DOCTYPE html> <html>\n";
-  ptr += "<html><body><center>\n";
-  ptr += "<h1>WiFi Desk Light</h1><br>\n";
-  //ptr += "<h1>Run a </h1>";
-  ptr += "<p>Current Universe: ";
-  ptr += (int)universe;
-  ptr += "<p>";
-  ptr += "<p>Current Address: ";
-  ptr += (int)address;
-  ptr += "<p>";
-  ptr += "<a>Rua a </a>";
-  ptr += "<a href='Testmode'>Led Test</a><br>";
-  ptr += "<a>Rua a </a>";
-  ptr += "<a href='PanTiltreset'>Pan/Tilt Reset</a><br>";
-  ptr += "<hr> ";
-
-  
-
-  //ptr += "<a href="Testmode">Led Test</a>";
-  ptr += "<br><br>\n";
-  //ptr += "<h1>Run a <a href="PanTiltreset">Pan/Tilt Reset</a><br>\n";
- 
- 
+    ptr += "<html><body><center>\n";
+    ptr += "<h1>WiFi Desk Light</h1><br>\n";
+    ptr += "<p>Current Universe: ";
+    ptr += (int)universe;
+    ptr += "<p>";
+    ptr += "<p>Current Address: ";
+    ptr += (int)address;
+    ptr += "<p>";
+    ptr += "<a>Rua a </a>";
+    ptr += "<a href='Testmode'>Led Test</a><br>";
+    ptr += "<a>Rua a </a>";
+    ptr += "<a href='PanTiltreset'>Pan/Tilt Reset</a><br>";
+    ptr += "<hr> ";
+    ptr += "<form action='/' method='POST'>";
+    ptr += "SACN Universe #: <input type='text' name='Universe'>";
+    ptr += "<input type='submit' value='Submit'>";
+    ptr += "</form><br>";
+    ptr += "<form action='/' method='POST'>";
+    ptr += "Starting Address #: <input type='text' name='Address'>";
+    ptr += "<input type='submit' value='Submit'>";
+    ptr += "<br><br>\n";
   return ptr;
 }
 

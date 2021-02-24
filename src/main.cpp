@@ -111,8 +111,10 @@ int tilt_angle;
 Servo pan_servo;
 Servo tilt_servo;
 
-int Uni;
-int Add;
+int Uni = 1;
+int Add = 1;
+String Argument_Name;
+int Univers_Response, Address_Response;
 
 E131 e131;
 
@@ -143,9 +145,34 @@ void handlePanTiltreset() {
 
 
 void handleRoot() {
-  Uni = 1;
-  Add = 32;
+//  Uni = 1;
+//  Add = 32;
   WebServer.send (200, "text/html", SendHTML(Uni,Add));
+
+
+  
+  if (WebServer.args() > 0 )
+ { // Arguments were received
+    for ( uint8_t i = 0; i < WebServer.args(); i++ ) {
+      //Serial.print(WebServer.argName(i)); // Display the argument
+      Argument_Name = WebServer.argName(i);
+      if (WebServer.argName(i) == "Universe") {
+        Serial.print(" Universe is: ");
+        Serial.println(WebServer.arg(i));
+        Univers_Response = WebServer.arg(i).toInt();
+        Uni = Univers_Response;
+        Serial.println(Uni);
+        // e.g. range_maximum = server.arg(i).toInt();   // use string.toInt()   if you wanted to convert the input to an integer number
+        // e.g. range_maximum = server.arg(i).toFloat(); // use string.toFloat() if you wanted to convert the input to a floating point number
+       } 
+       if (WebServer.argName(i) == "Address") {
+        Serial.print(" Starting Address is: ");
+        Serial.println(WebServer.arg(i));
+        Address_Response = WebServer.arg(i).toInt();
+       }    
+    }
+  }
+  
 }
 
 void handleNotFound(){
@@ -232,7 +259,7 @@ void setup() {
     
 
     // start reciving DMX on univers 1
-    e131.begin(E131_MULTICAST,1);
+    e131.begin(E131_MULTICAST,Uni);
 
 // start webserver    
     

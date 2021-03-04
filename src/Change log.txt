@@ -19,3 +19,4 @@ Version 0.0.5
 things to do:
 - make a diffrent pattern for wifi check
 - make a confimation for wifi conected
+- check this E131 libary https://github.com/forkineye/ESPAsyncE131

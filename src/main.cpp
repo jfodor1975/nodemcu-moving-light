@@ -1,13 +1,17 @@
+#include <FastLED.h>  // include FastLED *before* Artnet
+#include <ESP32Servo.h>
+#include <ArtnetWiFi.h>
+#include <WiFiManager.h>
+#include <LittleFS.h>
+#include <FS.h>
+#include <ArduinoJson.h>
+
 /*
- Moving light code
- version 0.0.3
- 
+ESP32 C3 super mini board
 
-Node MCU pins
-
-D1 = pan servo signal
-D2 = tilt servo signal
-D6 = WS2812B data
+D7 = pan servo signal
+D6 = tilt servo signal
+D2 = WS2812B data
 
 7 pixels led board.
 
@@ -39,246 +43,349 @@ Channel mapping
 |    24   | Led 7 Green |
 |    25   | Led 7 Blue  |
 |    26   | Reset/test  |
-
-
-codeing Notes:
-- commented out #define FASTLED_ALLOW_INTERRUPTS 0 to try to remove random colour flicker
-- added 20us delay at the end of the main loop to try and remove random flicker
-- added FastLED.setDither(0); to combat random led flashing while at 255 bightness.
--nope not it: wondering if a shieled data line is needed for the led data to remove flicker. so far this might be the answer 
-        as cross talk between the servo data lines might have interfered with the led data line in bread board testing.
-- might need a resitor on the led data line
 */
 
 
-#include <Arduino.h>
-
-#include <ESP8266WiFi.h>
 
 
-//#include <Wifi.h> // wifi information 
-
-// wifimanager includes with extra webserver for html serving
-
-#include <ESP8266WebServer.h>
-//#include <ESPAsyncWebServer.h>
-//#include <ESPAsyncWiFiManager.h>
-#include <DNSServer.h>
-#include <WiFiManager.h> 
-
-#include <E131.h>
-#include <Servo.h>
-#include <Adafruit_NeoPixel.h>
-
-// led defines
-#define LED_PIN     D4
-#define COLOR_ORDER GRB
-#define CHIPSET     WS2812b
-#define NUM_LEDS    7
-Adafruit_NeoPixel pixels(NUM_LEDS, LED_PIN, NEO_GRB+ NEO_KHZ400);
 
 
-/*
-wifi infromation can be set in the wifi.h file
-*/
-WiFiServer server(80); // wifimanager server
-String header;
-// HTML, move to file later
-ESP8266WebServer WebServer(80); // my server for pages
 
-//AsyncWebServer server(80);
-//DNSServer dns;
+/////////////////////////////////////////////////////
+// ensure we format the file sytem?
+#define FORMAT_LITTLEFS_IF_FAILED true
+/////////////////////////////////////////////////////
 
-// moved to Wifi.h file
-//const char ssid[] = "--------";         /* Replace with your SSID */
-//const char passphrase[] = "-------";   /* Replace with your WPA2 passphrase */
 
-// pan variables
-int pan_data;
+// can proably remover this once wifi managere works
+// WiFi stuff
+bool TEST_CP         = true; // always start the configportal, even if ap found
+int  TESP_CP_TIMEOUT = 30; // test cp timeout
+
+
+ArtnetWiFiReceiver artnet;
+uint16_t Fixture_universe = 1; // 0 - 32767
+uint8_t net = 0;        // 0 - 127
+uint8_t subnet = 0;     // 0 - 15
+uint16_t Fixture_address = 1;
+  // HTML converstion and display 
+  char convertedUniverse[6];
+  char convertedAddresss[3];
+
+
+//
+// LED stuff
+#define NUM_LEDS  7
+// #define LED_PIN   2 // LED D2 pin 
+const uint8_t PIN_LED_DATA = 2;
+CRGB leds[NUM_LEDS];
+//////////////////////////////////////////
+
+
+//
+// Servo Stuff
+Servo Pan_servo;
+Servo Tilt_servo;
+uint8_t Pan_Pos = 90;
+uint8_t Tilt_Pos = 90;
+
 int pan_data1;
 int pan_data2;
-int pan16b;
+int pan_16gb;
 int pan_angle;
-int pan_angle_last;
+int pan_angle_old;
 
-// tilt variables
-int tilt_data;
 int tilt_data1;
 int tilt_data2;
-int tilt16b;
+int tilt_16b;
 int tilt_angle;
-
-Servo pan_servo;
-Servo tilt_servo;
-
-int Uni = 1;
-int Add = 1;
-String Argument_Name;
-int Univers_Response, Address_Response;
-
-E131 e131;
-
-int counter = 0;
+int tilt_angle_old;
 
 
 
-// my includes for sanity
-#include <Led_test.h>
-#include <Led_ch.h>
-#include <index.h>
-#include <file.h>
+int minUs = 600;
+int maxUs = 2350;
 
-//************ HTML request handeling
-void handleTestmode() { 
- Serial.println("LED Test Called");
- WebServer.send(200, "text/html", Ledreset_page); //Send ADC value only to client ajax request 
- pixels.begin(); // INITIALIZE NeoPixel strip object (REQUIRED)
- pixels.clear(); // led self test function
- Led_test();
- 
+int Pan_Pin = 7; // Servo pin D7
+int Tilt_Pin = 6; // Servo pin D6
+
+int pos = 90;      // position in degrees
+ESP32PWM pwm;
+
+
+// file properties and usage
+// config file
+#define Json_config_file "/Fixture_config.json"
+// add format line here
+bool remove_Config = false;
+//bool remove_Config = true;
+
+// should save the config for testing?
+//bool shouldSaveConfig = false;
+bool shouldSaveConfig = true;
+
+
+
+
+
+void callback(const uint8_t *data, uint16_t size, const ArtDmxMetadata &metadata, const ArtNetRemoteInfo &remote) {
+    // you can also use pre-defined callbacks
 }
 
-void handlePanTiltreset() { 
- Serial.println("Reseting light");
- WebServer.send(200, "text/html", PanTilt_page); //Send ADC value only to client ajax request
- Servo_test(); // commented out for LED testing
-}
+bool saveConfig() {
+  JsonDocument doc;
+  doc["Fixture_Universe"] = Fixture_universe;
+  doc["Fixture_Address"] = Fixture_address;
 
-
-void handleRoot() {
-
-   
-  if (WebServer.args() > 0 )
- { // Arguments were received
-    for ( uint8_t i = 0; i < WebServer.args(); i++ ) {
-      //Serial.print(WebServer.argName(i)); // Display the argument
-      Argument_Name = WebServer.argName(i);
-      if (WebServer.argName(i) == "Universe") {
-        Serial.print(" Universe is: ");
-        Serial.println(WebServer.arg(i));
-        Univers_Response = WebServer.arg(i).toInt();
-        Uni = Univers_Response;
-        Serial.println(Uni);
-              
-        WebServer.send (200, "text/html", Confirm_Changes_HTML(Uni,Add));
-        delay(1000);
-        ESP.restart();
-        // e.g. range_maximum = server.arg(i).toInt();   // use string.toInt()   if you wanted to convert the input to an integer number
-        // e.g. range_maximum = server.arg(i).toFloat(); // use string.toFloat() if you wanted to convert the input to a floating point number
-       } 
-       if (WebServer.argName(i) == "Address") {
-        Serial.print(" Starting Address is: ");
-        Serial.println(WebServer.arg(i));
-        Address_Response = WebServer.arg(i).toInt();
-        Add = Address_Response;
-        WebServer.send (200, "text/html", Confirm_Changes_HTML(Uni,Add));
-       }    
-    }
+  File configFile = LittleFS.open(Json_config_file, "w");
+  if (!configFile) {
+    Serial.println("Failed to open config file for writing");
+    return false;
   }
-  WebServer.send (200, "text/html", SendHTML(Uni,Add));
+
+  // saves the document here
+  serializeJson(doc, configFile);
   
+  Serial.print("Saved Fixture Universe: ");
+  Serial.println(Fixture_universe);
+  Serial.print("Saved Fixture Address: ");
+  Serial.println(Fixture_address);
+  
+  return true;
 }
 
-void handleNotFound(){
-  WebServer.send(404, "text/plain", "404: Not found"); // Send HTTP status 404 (Not Found) when there's no handler for the URI in the request
+
+bool loadConfig() {
+  File configFile = LittleFS.open(Json_config_file, "r");
+  if (!configFile) {
+    Serial.println("Failed to open config file");
+    return false;
+  }
+
+  // this is where it reads the json document
+  JsonDocument doc;
+  auto error = deserializeJson(doc, configFile);
+  if (error) {
+    Serial.println("Failed to parse config file");
+    return false;
+  }
+  
+  Fixture_universe = doc["Fixture_Universe"].as<int>();
+  Fixture_address = doc["Fixture_Address"].as<int>();
+//  const char* serverName = doc["serverName"];
+//  const char* accessToken = doc["accessToken"];
+
+  // Real world application would store these values in some variables for
+  // later use.
+
+  Serial.print("Loaded Fixture Universe: "); Serial.println(Fixture_universe);
+  Serial.print("Loaded Fixture Universe Json: "); Serial.println(doc["Fixture_Universe"].as<String>());
+  Serial.print("Loaded Fixture Address: "); Serial.println(Fixture_address);
+  Serial.print("Loaded Fixture Address Json: "); Serial.println(doc["Fixture_Address"].as<String>());
+  return true;
 }
 
-
+void saveConfigCallback()
+{
+  Serial.println("Should save config");
+  shouldSaveConfig = true;
+}
 
 void setup() {
-    pinMode(5, OUTPUT);
-    pinMode(4, OUTPUT);
-    // neopixel startup
-    
-    pixels.begin(); // INITIALIZE NeoPixel strip object (REQUIRED)
-    pixels.clear();
-    
-    
-    Serial.begin(115200);
-    delay(10);
-    
-
-    /* Choose one to begin listening for E1.31 data */
-    //e131.begin(ssid, passphrase);               /* via Unicast on the default port */
-    //e131.beginMulticast(ssid, passphrase, 1); /* via Multicast for Universe 1 */
-    
-// WiFiManager
-   // Local intialization. Once its business is done, there is no need to keep it around
-   WiFiManager wifiManager;
+  WiFi.mode(WIFI_STA); // explicitly set mode, esp defaults to STA+AP
   
-   // Uncomment and run it once, if you want to erase all the stored information 
-   //wifiManager.resetSettings();
-  
-   // set custom ip for portal
-   //wifiManager.setAPConfig(IPAddress(10,0,1,1), IPAddress(10,0,1,1), IPAddress(255,255,255,0));
+  FastLED.addLeds<WS2812B, PIN_LED_DATA,GRB>(leds, NUM_LEDS);
 
-   // fetches ssid and pass from eeprom and tries to connect
-   // if it does not connect it starts an access point with the specified name
-   // here  "AutoConnectAP"
-   // and goes into a blocking loop awaiting configuration
-   wifiManager.autoConnect("Desk_Mover_AP");
-   // or use this for auto generated name ESP + ChipID
-   //wifiManager.autoConnect();
-  
-   // if you get here you have connected to the WiFi
-   Serial.println("Connected.");
-   Serial.println(WiFi.localIP());
+  Serial.begin(115200);
+  delay(2000);
 
-/*  asycnwifimanager code  proably not going to use this
-
-    // wifi manager config
-         AsyncWiFiManager wifiManager(&server,&dns);
-         wifiManager.resetSettings();
-        Wifi_LED_setup();
-        //wifiManager.autoConnect("Desk_light");
+  if (!LittleFS.begin()) {
+    Serial.println("Failed to mount file system");
+    return;
+  }
   
-        if (!wifiManager.autoConnect("Desk_light")) {
-                Serial.println("failed to connect, we should reset as see if it connects");
-                delay(3000);
-                ESP.reset();
-                delay(5000);
+  // load the config file if it exsits.
+    if (!loadConfig()) {
+    Serial.println("Failed to load config");
+  } else {
+    Serial.println("Config loaded");
   }
 
+// Allow allocation of all timers
+	ESP32PWM::allocateTimer(0);
+	ESP32PWM::allocateTimer(1);
+	ESP32PWM::allocateTimer(2);
+  ESP32PWM::allocateTimer(3);
+	
+	Pan_servo.setPeriodHertz(50);      // Standard 50hz servo
+	Tilt_servo.setPeriodHertz(50);      // Standard 50hz servo
+      
+// WiFi stuff
+WiFiManager wm;
+
+wm.setConfigPortalTimeout(60);
+wm.setAPClientCheck(true); // avoid timeout if client connected to softap
+wm.setMinimumSignalQuality(40);  // set min RSSI (percentage) to show in scans, null = 8%
+wm.setParamsPage(true);
+wm.setDarkMode(true);
+wm.setTitle("Desk Lamp");
+
+// uncomment for testing new configs, and wanting to resest the saved settings 
+//wm.resetSettings();
 
 
 
-   // if you get here you have connected to the WiFi
-   Serial.println("Connected.");
-   Serial.println(WiFi.localIP());    
+// HTML code to display custom vaules and settings for the fixutre
+  sprintf(convertedUniverse, "%d", Fixture_universe); // Need to convert to string to display a default value.
+  sprintf(convertedAddresss, "%d", Fixture_address);
 
+
+  WiFiManagerParameter custom_universe("HTML_uni", "Universe", convertedUniverse, 3); // 7 == max length
+  WiFiManagerParameter custom_adderess("HTML_add", "Address", convertedAddresss, 3); // 7 == max length
+
+wm.addParameter(&custom_universe);
+wm.addParameter(&custom_adderess);
+
+
+
+  if(!wm.autoConnect("Desk_LED","desk1234")) {
+    Serial.println("failed to connect and hit timeout");
+  }
+  else if(TEST_CP) {
+    // start configportal always
+    delay(1000);
+    Serial.println("TEST_CP ENABLED");
+    wm.setConfigPortalTimeout(TESP_CP_TIMEOUT);
+    wm.startConfigPortal("Desk_LED_config","12345678");
+  }
+  else {
+    //if you get here you have connected to the WiFi
+     Serial.println("connected...yeey :)");
+  }
+
+  Serial.println("i'm passed the portal opening");
+
+
+  // ensure we write univers and address to be the current vaules.
+  Fixture_universe = atoi(custom_universe.getValue());
+  Fixture_address = atoi(custom_adderess.getValue());
+
+/*
+  if (!wm.autoConnect()) {
+    saveConfig();
+    Serial.println("Saving; hit timeout");
+  }
 */
-    
-    // servo setup and test
-    pan_servo.attach(5);  // nodemcu D1 output
-    tilt_servo.attach(4); // nodemcu D2 output
+  if (shouldSaveConfig)
+  {
+    Serial.println("Calling the save function now");
+    saveConfig();
+  }
+/*
 
-    // servo test fuction
-    Servo_test(); // commented out for LED testing
-    delay(500);  // commented out for LED testing
+bool res;
+ res = wm.autoConnect("Desk_LED","desk1234"); // password protected ap
+
+    if(!res) {
+        Serial.println("Failed to connect");
+        ESP.restart();
+    } 
+    else {
+        //if you get here you have connected to the WiFi    
+        Serial.println("connected...yeey :)");
+
+        universe1 = atoi(custom_universe.getValue());
+        address = atoi(custom_adderess.getValue());
+
+        Serial.print("Universe: "); Serial.print(universe1); Serial.println();
+        Serial.print("Address: "); Serial.print(address); Serial.println();
+        if (shouldSaveConfig)
+        {
+            saveConfigFile();
+        }
+    }
+*/
+
+// copy universe and address so they can be used.
 
 
+    artnet.begin();
 
-    // led self test function
-    Led_test();
-    
+    // if Artnet packet comes to this universe, forward them to fastled directly
+    //artnet.forwardArtDmxDataToFastLED(universe1, leds, NUM_LEDS);
 
-    // start reciving DMX on univers 1
-    e131.begin(E131_MULTICAST,Uni);
-    
+    // this can be achieved manually as follows
+    // if Artnet packet comes to this universe, this function (lambda) is called
+     artnet.subscribeArtDmxUniverse(Fixture_universe, [&](const uint8_t* data, uint16_t size, const ArtDmxMetadata &metadata, const ArtNetRemoteInfo &remote) {
+    //     // set led
+    //     // artnet data size per packet is 512 max
+    //     // so there is max 170 pixel per packet (per universe)
+         for (size_t pixel = 0; pixel < NUM_LEDS; ++pixel) {
+             size_t idx = pixel * 3 + 4;
+             leds[pixel].r = data[idx + 0];
+             leds[pixel].g = data[idx + 1];
+             leds[pixel].b = data[idx + 2];
+             Serial.print ("Pixel = "); Serial.print(pixel);
+             Serial.print (" Red = ");Serial.print(data[idx +0]);
+             Serial.print (" Green = ");Serial.print(data[idx + 1]); 
+             Serial.print (" Blue = ");Serial.print(data[idx + 2]);
+             Serial.println();
+         }
+//          pan_angle = map(data[3],0,255,minUs,maxUs);
+//          tilt_angle = map(data[4],0,255,minUs,maxUs);
 
-// start webserver    
-    
-    
-    WebServer.on("/", handleRoot);               // Call the 'handleRoot' function when a client requests URI "/"
-    WebServer.onNotFound(handleNotFound);        // When a client requests an unknown URI (i.e. something other than "/"), call function "handleNotFound"
-    WebServer.on("/Testmode", handleTestmode);   // call the test mode function
-    WebServer.on("/PanTiltreset", handlePanTiltreset); // call the reset function
-    WebServer.on("/Mainpage", handlePanTiltreset); // goto the main page
+        pan_data1 = data[0];
+        pan_data2 = data[1];
+        tilt_data1 = data[2];
+        tilt_data2 = data[3];
+        
+        pan_16gb = (pan_data1 * 256) + pan_data2;
+        tilt_16b = (tilt_data1 * 256) + tilt_data2;
+        pan_angle = map(pan_16gb,0,65025,minUs,maxUs);
+        tilt_angle = map(tilt_16b,0,65025,minUs,maxUs);
+        
 
-    WebServer.begin();                           // Actually start the server
-    Serial.println("HTTP server started");
 
+//         Serial.print("Data 1= "); Serial.print(pan_data1);
+//         Serial.print (" Data 2 = "); Serial.print(pan_data2);
+//         Serial.print (" 16b value = "); Serial.print(pan_16gb);
+//         Serial.print (" Pan Angle = "); Serial.print(pan_angle);
+//         Serial.print (" Tilt Angle = "); Serial.print(tilt_angle);
+         
+        if (pan_angle != pan_angle_old or tilt_angle != tilt_angle_old) {
+          Pan_servo.writeMicroseconds(pan_angle);
+          Tilt_servo.writeMicroseconds(tilt_angle); 
+          pan_angle_old = pan_angle;
+          tilt_angle_old = tilt_angle;
+          Serial.print (" Pan Angle = "); Serial.print(pan_angle);
+          Serial.print (" Tilt Angle = "); Serial.print(tilt_angle);
+          Serial.println();
+          //Serial.print (" Pan Angle = Update ");
+          }  
+        
+//        if (tilt_angle != tilt_angle_old) {
+//         Tilt_servo.writeMicroseconds(tilt_angle); 
+//         Serial.print (" Tilt Angle = Update ");
+//         } 
+        
+        
+//        Serial.println();
 
+     });
+
+//  Pan_servo.attach(Pan_Pin, minUs, maxUs);
+	Tilt_servo.attach(Tilt_Pin, minUs, maxUs);
+#if defined(CONFIG_IDF_TARGET_ESP32S2) || defined(CONFIG_IDF_TARGET_ESP32C3)
+	pwm.attachPin(21, 10000);//10khz
+#elif defined(CONFIG_IDF_TARGET_ESP32C3)
+	pwm.attachPin(7, 10000);//10khz
+#else
+	pwm.attachPin(27, 10000);//10khz
+#endif
+
+/// =====  Basic FastLED code
+//  FastLED.addLeds<WS2812B, LED_PIN, GRB>(leds, NUM_LEDS);
+//  FastLED.setBrightness(50);
 
 }
 
@@ -286,105 +393,37 @@ void setup() {
 
 
 void loop() {
-    //websever code
-    WebServer.handleClient();    
-  
-     
-    /* Parse a E131 packet */
-    uint16_t num_channels = e131.parsePacket();
-//    Serial.print (num_channels);
-//    Serial.print ("\n");
-  
-        
-    /* Process channel data if we have it, and print it in the serial monitor*/
-    if (num_channels) {
-        
-/*      // debug information via the serial console
-        Serial.printf("Num_channels: %u  Packet#: %u  CH1: %u CH2: %u  CH3: %u  CH4: %u LED: CH5: %u  CH6: %u  CH7: %u  CH8: %u  CH9: %u  CH10: %u  CH11: %u  CH12: %u  CH13: %u  CH14: %u  CH15: %u  CH16: %u  CH17: %u  CH18: %u  CH19: %u  CH20: %u  CH21: %u  CH22: %u  CH23: %u  CH24: %u  CH25: %u  CH26: %u :",
-                //e131.universe,              // The Universe for this packet
-                num_channels,               // Number of channels in this packet
-                e131.stats.num_packets,     // Packet counter
-                //e131.stats.packet_errors,   // Packet error counter
-                e131.data[0],              // pan 1 data for Channel 1 this chanel for 8bit
-                e131.data[1],              // pan 2 data for Channel 2 16b Pan
-                e131.data[2],              // tilt 1 data for Channel 3 this chanel for 8bit
-                e131.data[3],              // tilt 2 data for Channel 4 16bit tilt
-                e131.data[4],e131.data[5],e131.data[6],     // LED 1 RGB Data
-                e131.data[7],e131.data[8],e131.data[9],     // LED 2 RGB Data
-                e131.data[10],e131.data[11],e131.data[12],  // LED 3 RGB Data
-                e131.data[13],e131.data[14],e131.data[15],  // LED 4 RGB Data
-                e131.data[16],e131.data[17],e131.data[18],  // LED 5 RGB Data
-                e131.data[19],e131.data[20],e131.data[21],  // LED 6 RGB Data
-                e131.data[22],e131.data[23],e131.data[24],  // LED 7 RGB Data
-                e131.data[25]);                             // Function Data
- */                     
-        
-        //  Led Code call on every other packet
-        //Serial.printf("Counter: %u", counter); // serial debuging check for skipping e131 packets
-        
-//        if (counter == 0) 
-//        {
-                //Serial.printf("calling LED Data");  // for debuging
-                set_led_data();  // calling LED fuction to set the led colours per pixel
-//                counter++;
-//        } 
-//        else if (counter == 1) 
-//        {
-                //Serial.printf("Reseting counter");  // for debuging
-//                counter--;
-//        }      
+ 
+  artnet.parse();  // check if artnet packet has come and execute callback
+  FastLED.show();
 
-        // get Pan/Tilt channel datat
-        pan_data1 = e131.data[0];
-        pan_data2 = e131.data[1];
-        tilt_data1 = e131.data[2];
-        tilt_data2 = e131.data[3];
-                       
-        // 16 bit math 
-        pan_data = (pan_data1 *256) + pan_data2;
-        tilt_data = (tilt_data1 * 256) + tilt_data2;
-
-
-        // 8b angle
-        //pan_angle = map(pan_data1,0,255,0,180);
-        //tilt_angle = map(tilt_data1,0,255,0,180);
-
-        // 16b angle
-        pan_angle = map(pan_data,0,65025,550,2330);
-        tilt_angle = map(tilt_data,0,65025,550,2330);
-        
-        if (pan_angle_last != pan_angle) {
-                // for 16b fiture
-                pan_servo.writeMicroseconds(pan_angle);
-               pan_angle_last = pan_angle;
-                tilt_servo.writeMicroseconds(tilt_angle);
-                
-                // for 8 bit fixture
-                //pan_servo.write(pan_angle);
-                //tilt_servo.write(tilt_angle);
-                
-    //           Serial.printf("Pan Data: %u  Pan angle: %u   Tilt Data %u   Tilt angle: %u\n",
-    //                    pan_data,
-    //                    pan_angle,
-    //                    tilt_data,
-    //                    tilt_angle);
-    //            delayMicroseconds(20);
-                }
-        else
-        {
-    //            printf("\n");
-        }
-        
-
-        
-//        delay(20);
-
-        
-        
-
-     }     
-     
-
-
-     
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

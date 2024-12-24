@@ -1,5 +1,6 @@
 #include <FastLED.h>  // include FastLED *before* Artnet
-#include <ESP32Servo.h>
+//#include <ESP32Servo.h> // removed in this branch
+
 #include <ArtnetWiFi.h>
 #include <WiFiManager.h>
 #include <LittleFS.h>
@@ -46,14 +47,32 @@ Channel mapping
 */
 
 
+
+
+
+
+// Must specify this before the include of "ServoEasing.hpp"
+//#define USE_PCA9685_SERVO_EXPANDER    // Activating this enables the use of the PCA9685 I2C expander chip/board.
+//#define USE_SOFT_I2C_MASTER           // Saves 1756 bytes program memory and 218 bytes RAM compared with Arduino Wire
+//#define USE_SERVO_LIB                 // If USE_PCA9685_SERVO_EXPANDER is defined, Activating this enables force additional using of regular servo library.
+//#define USE_LIGHTWEIGHT_SERVO_LIBRARY // Makes the servo pulse generating immune to other libraries blocking interrupts for a longer time like SoftwareSerial, Adafruit_NeoPixel and DmxSimple.
+//#define PROVIDE_ONLY_LINEAR_MOVEMENT  // Activating this disables all but LINEAR movement. Saves up to 1540 bytes program memory.
+//#define DISABLE_COMPLEX_FUNCTIONS     // Activating this disables the SINE, CIRCULAR, BACK, ELASTIC, BOUNCE and PRECISION easings. Saves up to 1850 bytes program memory.
+//#define DISABLE_MICROS_AS_DEGREE_PARAMETER // Activating this disables microsecond values as (target angle) parameter. Saves 128 bytes program memory.
+//#define DISABLE_MIN_AND_MAX_CONSTRAINTS    // Activating this disables constraints. Saves 4 bytes RAM per servo but strangely enough no program memory.
+//#define DISABLE_PAUSE_RESUME          // Activating this disables pause and resume functions. Saves 5 bytes RAM per servo.
+
+#include <ServoEasing.hpp> // added in this branch
+
 /////////////////////////////////////////////////////
 // ensure we format the file sytem?
 #define FORMAT_LITTLEFS_IF_FAILED true
 /////////////////////////////////////////////////////
 
 
-// can proably remover this once wifi managere works
+// can proably remover this once wifi managere works, maybe leave it for config purposes after release.
 // WiFi stuff
+
 bool TEST_CP         = true; // always start the configportal, even if ap found
 int  TESP_CP_TIMEOUT = 30; // test cp timeout
 
@@ -79,8 +98,12 @@ CRGB leds[NUM_LEDS];
 
 //
 // Servo Stuff
-Servo Pan_servo;
-Servo Tilt_servo;
+
+ServoEasing Pan_servo;
+ServoEasing Tilt_servo;
+  
+//Servo Pan_servo;
+//Servo Tilt_servo;
 uint8_t Pan_Pos = 90;
 uint8_t Tilt_Pos = 90;
 
@@ -98,8 +121,8 @@ int tilt_angle_old;
 
 
 
-int minUs = 600;
-int maxUs = 2350;
+int minUs = 550;
+int maxUs = 2390;
 
 int Pan_Pin = 7; // Servo pin D7
 int Tilt_Pin = 6; // Servo pin D6
@@ -119,7 +142,7 @@ bool remove_Config = false;
 //bool shouldSaveConfig = false;
 bool shouldSaveConfig = true;
 
-
+int DM_Debug_Level = 3; // 0 = no serial, 1 = all, 2 = LED's only, 3 = Pan/tilt information
 
 
 
@@ -214,6 +237,10 @@ void setup() {
 	
 	Pan_servo.setPeriodHertz(50);      // Standard 50hz servo
 	Tilt_servo.setPeriodHertz(50);      // Standard 50hz servo
+  Pan_servo.setSpeed (450);
+  Tilt_servo.setSpeed (450);
+  Pan_servo.setEasingType(EASE_PRECISION_OUT);
+  Tilt_servo.setEasingType(EASE_PRECISION_IN);
       
 // WiFi stuff
 WiFiManager wm;
@@ -320,11 +347,19 @@ bool res;
              leds[pixel].r = data[idx + 0];
              leds[pixel].g = data[idx + 1];
              leds[pixel].b = data[idx + 2];
-             Serial.print ("Pixel = "); Serial.print(pixel);
-             Serial.print (" Red = ");Serial.print(data[idx +0]);
-             Serial.print (" Green = ");Serial.print(data[idx + 1]); 
-             Serial.print (" Blue = ");Serial.print(data[idx + 2]);
-             Serial.println();
+
+
+/*
+
+             if (DM_Debug_Level = 2){
+              Serial.print ("Pixel = "); Serial.print(pixel);
+              Serial.print (" Red = ");Serial.print(data[idx +0]);
+              Serial.print (" Green = ");Serial.print(data[idx + 1]); 
+              Serial.print (" Blue = ");Serial.print(data[idx + 2]);
+              Serial.println();
+             }
+
+*/
          }
 //          pan_angle = map(data[3],0,255,minUs,maxUs);
 //          tilt_angle = map(data[4],0,255,minUs,maxUs);
@@ -348,14 +383,27 @@ bool res;
 //         Serial.print (" Tilt Angle = "); Serial.print(tilt_angle);
          
         if (pan_angle != pan_angle_old or tilt_angle != tilt_angle_old) {
-          Pan_servo.writeMicroseconds(pan_angle);
-          Tilt_servo.writeMicroseconds(tilt_angle); 
+
+
+//          Pan_servo.writeMicroseconds(pan_angle);
+//          Tilt_servo.writeMicroseconds(tilt_angle); 
+          
+          Pan_servo.easeTo(pan_angle);
+          Tilt_servo.easeTo(tilt_angle);        
           pan_angle_old = pan_angle;
           tilt_angle_old = tilt_angle;
-          Serial.print (" Pan Angle = "); Serial.print(pan_angle);
-          Serial.print (" Tilt Angle = "); Serial.print(tilt_angle);
-          Serial.println();
-          //Serial.print (" Pan Angle = Update ");
+
+            if (DM_Debug_Level = 1 or 3){
+              Serial.print (" Pan Data 1 = "); Serial.print(pan_data1);
+              Serial.print (" Pan Data 2 = "); Serial.print(pan_data2);
+              Serial.print (" Pan 16b = "); Serial.print(pan_16gb);
+              Serial.print (" Pan Angle = "); Serial.print(pan_angle);
+              Serial.print (" Tilt Angle = "); Serial.print(tilt_angle);
+              Serial.println();
+              //Serial.print (" Pan Angle = Update ");
+            }
+
+
           }  
         
 //        if (tilt_angle != tilt_angle_old) {

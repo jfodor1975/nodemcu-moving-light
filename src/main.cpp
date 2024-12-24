@@ -46,11 +46,6 @@ Channel mapping
 */
 
 
-
-
-
-
-
 /////////////////////////////////////////////////////
 // ensure we format the file sytem?
 #define FORMAT_LITTLEFS_IF_FAILED true
@@ -373,7 +368,7 @@ bool res;
 
      });
 
-//  Pan_servo.attach(Pan_Pin, minUs, maxUs);
+  Pan_servo.attach(Pan_Pin, minUs, maxUs);
 	Tilt_servo.attach(Tilt_Pin, minUs, maxUs);
 #if defined(CONFIG_IDF_TARGET_ESP32S2) || defined(CONFIG_IDF_TARGET_ESP32C3)
 	pwm.attachPin(21, 10000);//10khz

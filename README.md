@@ -54,3 +54,6 @@ ToDo:
     - green to show a good conection 
     - purple for config protal open
     - red for no protal or connection 
+
+- see about chaning the servo timing to relate to the value change of the artnet vaules.
+

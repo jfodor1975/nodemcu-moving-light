@@ -112,13 +112,14 @@ int pan_data2;
 int pan_16gb;
 int pan_angle;
 int pan_angle_old;
+int pan_change_new;
 
 int tilt_data1;
 int tilt_data2;
 int tilt_16b;
 int tilt_angle;
 int tilt_angle_old;
-
+int tilt_change_new;
 
 
 int minUs = 550;
@@ -127,7 +128,7 @@ int maxUs = 2390;
 int Pan_Pin = 7; // Servo pin D7
 int Tilt_Pin = 6; // Servo pin D6
 
-int pos = 90;      // position in degrees
+int int_pos = 90;      // position in degrees
 ESP32PWM pwm;
 
 
@@ -237,15 +238,30 @@ void setup() {
 	
 	Pan_servo.setPeriodHertz(50);      // Standard 50hz servo
 	Tilt_servo.setPeriodHertz(50);      // Standard 50hz servo
-  Pan_servo.setSpeed (450);
-  Tilt_servo.setSpeed (450);
-  Pan_servo.setEasingType(EASE_PRECISION_OUT);
-  Tilt_servo.setEasingType(EASE_PRECISION_IN);
+  Pan_servo.setSpeed (400);
+  Tilt_servo.setSpeed (400);
+  Pan_servo.setEasingType(EASE_LINEAR);
+  Tilt_servo.setEasingType(EASE_LINEAR);
+
+
+  Pan_servo.attach(Pan_Pin, minUs, maxUs);
+  Tilt_servo.attach(Tilt_Pin, minUs, maxUs);
+#if defined(CONFIG_IDF_TARGET_ESP32S2) || defined(CONFIG_IDF_TARGET_ESP32C3)
+	pwm.attachPin(21, 10000);//10khz
+#elif defined(CONFIG_IDF_TARGET_ESP32C3)
+	pwm.attachPin(7, 10000);//10khz
+#else
+	pwm.attachPin(27, 10000);//10khz
+#endif
+
+  Pan_servo.write(int_pos);
+  Tilt_servo.write(int_pos);
+  
       
 // WiFi stuff
 WiFiManager wm;
 
-wm.setConfigPortalTimeout(60);
+wm.setConfigPortalTimeout(10);
 wm.setAPClientCheck(true); // avoid timeout if client connected to softap
 wm.setMinimumSignalQuality(40);  // set min RSSI (percentage) to show in scans, null = 8%
 wm.setParamsPage(true);
@@ -373,6 +389,10 @@ bool res;
         tilt_16b = (tilt_data1 * 256) + tilt_data2;
         pan_angle = map(pan_16gb,0,65025,minUs,maxUs);
         tilt_angle = map(tilt_16b,0,65025,minUs,maxUs);
+
+
+        
+        
         
 
 
@@ -383,10 +403,9 @@ bool res;
 //         Serial.print (" Tilt Angle = "); Serial.print(tilt_angle);
          
         if (pan_angle != pan_angle_old or tilt_angle != tilt_angle_old) {
+    
 
 
-//          Pan_servo.writeMicroseconds(pan_angle);
-//          Tilt_servo.writeMicroseconds(tilt_angle); 
           
           Pan_servo.easeTo(pan_angle);
           Tilt_servo.easeTo(tilt_angle);        
@@ -394,14 +413,18 @@ bool res;
           tilt_angle_old = tilt_angle;
 
             if (DM_Debug_Level = 1 or 3){
-              Serial.print (" Pan Data 1 = "); Serial.print(pan_data1);
-              Serial.print (" Pan Data 2 = "); Serial.print(pan_data2);
-              Serial.print (" Pan 16b = "); Serial.print(pan_16gb);
-              Serial.print (" Pan Angle = "); Serial.print(pan_angle);
-              Serial.print (" Tilt Angle = "); Serial.print(tilt_angle);
-              Serial.println();
+//              Serial.print (" Pan Data 1 = "); Serial.print(pan_data1);
+//              Serial.print (" Pan Data 2 = "); Serial.print(pan_data2);
+//              Serial.print (" Pan 16b = "); Serial.print(pan_16gb);
+//              Serial.print (" Pan Angle = "); Serial.print(pan_angle);
+//              Serial.print (" Pan_Speed change new = "); Serial.print(pan_change_new);
+//              Serial.print (" Pan_Speed change new = "); Serial.print(tilt_change_new);
+//              Serial.print (" Tilt Angle = "); Serial.print(tilt_angle);
+              
+//              Serial.println();
               //Serial.print (" Pan Angle = Update ");
             }
+          
 
 
           }  
@@ -416,15 +439,7 @@ bool res;
 
      });
 
-  Pan_servo.attach(Pan_Pin, minUs, maxUs);
-	Tilt_servo.attach(Tilt_Pin, minUs, maxUs);
-#if defined(CONFIG_IDF_TARGET_ESP32S2) || defined(CONFIG_IDF_TARGET_ESP32C3)
-	pwm.attachPin(21, 10000);//10khz
-#elif defined(CONFIG_IDF_TARGET_ESP32C3)
-	pwm.attachPin(7, 10000);//10khz
-#else
-	pwm.attachPin(27, 10000);//10khz
-#endif
+  
 
 /// =====  Basic FastLED code
 //  FastLED.addLeds<WS2812B, LED_PIN, GRB>(leds, NUM_LEDS);
@@ -439,7 +454,7 @@ void loop() {
  
   artnet.parse();  // check if artnet packet has come and execute callback
   FastLED.show();
-
+ 
 }
 
 

@@ -43,6 +43,18 @@ Channel mapping
 |    26   | Reset/test  | this channel is not implemented
 */
 
+Wire colours
+Servo:
+Red - 5v+
+Brown - Gnd
+orange - Data
+
+LED borad:
+Red - 5v+
+Black - Gnd
+Blue - Data
+
+
 
 change log
 Dec 2024: rewrote all the code to work with the Esp32 c3 super mini board.

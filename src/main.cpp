@@ -338,10 +338,7 @@ wm.addParameter(&custom_adderess);
              leds[pixel].r = data[idx + 0];
              leds[pixel].g = data[idx + 1];
              leds[pixel].b = data[idx + 2];
-
-
 /*
-
              if (DM_Debug_Level = 2){
               Serial.print ("Pixel = "); Serial.print(pixel);
               Serial.print (" Red = ");Serial.print(data[idx +0]);
@@ -349,12 +346,8 @@ wm.addParameter(&custom_adderess);
               Serial.print (" Blue = ");Serial.print(data[idx + 2]);
               Serial.println();
              }
-
 */
          }
-//          pan_angle = map(data[3],0,255,minUs,maxUs);
-//          tilt_angle = map(data[4],0,255,minUs,maxUs);
-
         pan_data1 = data[0];
         pan_data2 = data[1];
         tilt_data1 = data[2];

@@ -74,7 +74,7 @@ Channel mapping
 // WiFi stuff
 
 bool TEST_CP         = true; // always start the configportal, even if ap found
-int  TESP_CP_TIMEOUT = 30; // test cp timeout
+int  TESP_CP_TIMEOUT = 15; // test cp timeout
 
 // Artnet inital settings
 ArtnetWiFiReceiver artnet;
@@ -387,7 +387,7 @@ wm.addParameter(&custom_adderess);
           pan_angle_old = pan_angle;
           tilt_angle_old = tilt_angle;
 
-            if (DM_Debug_Level = 1 or 3){
+//            if (DM_Debug_Level = 1 or 3){
 //              Serial.print (" Pan Data 1 = "); Serial.print(pan_data1);
 //              Serial.print (" Pan Data 2 = "); Serial.print(pan_data2);
 //              Serial.print (" Pan 16b = "); Serial.print(pan_16gb);
@@ -398,7 +398,7 @@ wm.addParameter(&custom_adderess);
               
 //              Serial.println();
               //Serial.print (" Pan Angle = Update ");
-            }
+//            }
           }  
      });
 }

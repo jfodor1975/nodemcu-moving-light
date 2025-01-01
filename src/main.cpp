@@ -70,13 +70,13 @@ Channel mapping
 /////////////////////////////////////////////////////
 
 
-// can proably remover this once wifi managere works, maybe leave it for config purposes after release.
+
 // WiFi stuff
 
 bool TEST_CP         = true; // always start the configportal, even if ap found
 int  TESP_CP_TIMEOUT = 30; // test cp timeout
 
-
+// Artnet inital settings
 ArtnetWiFiReceiver artnet;
 uint16_t Fixture_universe = 1; // 0 - 32767
 uint8_t net = 0;        // 0 - 127
@@ -90,8 +90,7 @@ uint16_t Fixture_address = 1;
 //
 // LED stuff
 #define NUM_LEDS  7
-// #define LED_PIN   2 // LED D2 pin 
-const uint8_t PIN_LED_DATA = 2;
+const uint8_t PIN_LED_DATA = 2;  // LED D2 pin 
 CRGB leds[NUM_LEDS];
 //////////////////////////////////////////
 
@@ -122,8 +121,8 @@ int tilt_angle_old;
 int tilt_change_new;
 
 
-int minUs = 550;
-int maxUs = 2390;
+int minUs = 550; // tower pro servo low Us setting
+int maxUs = 2390; // tower pro servo high Us setting
 
 int Pan_Pin = 7; // Servo pin D7
 int Tilt_Pin = 6; // Servo pin D6
@@ -258,10 +257,10 @@ void setup() {
   Tilt_servo.write(int_pos);
   
       
-// WiFi stuff
+//  more WiFi stuff
 WiFiManager wm;
 
-wm.setConfigPortalTimeout(10);
+//wm.setConfigPortalTimeout(10);
 wm.setAPClientCheck(true); // avoid timeout if client connected to softap
 wm.setMinimumSignalQuality(40);  // set min RSSI (percentage) to show in scans, null = 8%
 wm.setParamsPage(true);
@@ -301,7 +300,7 @@ wm.addParameter(&custom_adderess);
      Serial.println("connected...yeey :)");
   }
 
-  Serial.println("i'm passed the portal opening");
+  Serial.println("Configuration portal open");
 
 
   // ensure we write univers and address to be the current vaules.
@@ -316,36 +315,12 @@ wm.addParameter(&custom_adderess);
 */
   if (shouldSaveConfig)
   {
-    Serial.println("Calling the save function now");
+    Serial.println("Resaving the settings");
     saveConfig();
   }
-/*
 
-bool res;
- res = wm.autoConnect("Desk_LED","desk1234"); // password protected ap
 
-    if(!res) {
-        Serial.println("Failed to connect");
-        ESP.restart();
-    } 
-    else {
-        //if you get here you have connected to the WiFi    
-        Serial.println("connected...yeey :)");
-
-        universe1 = atoi(custom_universe.getValue());
-        address = atoi(custom_adderess.getValue());
-
-        Serial.print("Universe: "); Serial.print(universe1); Serial.println();
-        Serial.print("Address: "); Serial.print(address); Serial.println();
-        if (shouldSaveConfig)
-        {
-            saveConfigFile();
-        }
-    }
-*/
-
-// copy universe and address so they can be used.
-
+  Serial.println("Looking for Artnet");
 
     artnet.begin();
 
@@ -424,30 +399,9 @@ bool res;
 //              Serial.println();
               //Serial.print (" Pan Angle = Update ");
             }
-          
-
-
           }  
-        
-//        if (tilt_angle != tilt_angle_old) {
-//         Tilt_servo.writeMicroseconds(tilt_angle); 
-//         Serial.print (" Tilt Angle = Update ");
-//         } 
-        
-        
-//        Serial.println();
-
      });
-
-  
-
-/// =====  Basic FastLED code
-//  FastLED.addLeds<WS2812B, LED_PIN, GRB>(leds, NUM_LEDS);
-//  FastLED.setBrightness(50);
-
 }
-
-
 
 
 void loop() {

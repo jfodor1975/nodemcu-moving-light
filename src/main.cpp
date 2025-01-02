@@ -121,7 +121,7 @@ int tilt_angle_old;
 int tilt_change_new;
 
 
-int minUs = 550; // tower pro servo low Us setting
+int minUs = 510; // tower pro servo low Us setting
 int maxUs = 2390; // tower pro servo high Us setting
 
 int Pan_Pin = 7; // Servo pin D7
@@ -253,14 +253,16 @@ void setup() {
 	pwm.attachPin(27, 10000);//10khz
 #endif
 
-  Pan_servo.write(int_pos);
-  Tilt_servo.write(int_pos);
+  Pan_servo.easeToD(int_pos,100);
+  Tilt_servo.easeToD(int_pos,100);
   
       
 //  more WiFi stuff
 WiFiManager wm;
 
 //wm.setConfigPortalTimeout(10);
+wm.setHostname("Desk LED");  // set Hostname
+wm.setConnectRetries(2);  // set wifi connect retries
 wm.setAPClientCheck(true); // avoid timeout if client connected to softap
 wm.setMinimumSignalQuality(40);  // set min RSSI (percentage) to show in scans, null = 8%
 wm.setParamsPage(true);

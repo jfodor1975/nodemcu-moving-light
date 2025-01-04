@@ -67,5 +67,8 @@ ToDo:
     - purple for config protal open
     - red for no protal or connection 
 
-- see about chaning the servo timing to relate to the value change of the artnet vaules.
+- Done: see about chaning the servo timing to relate to the value change of the artnet vaules.
+- add colour temp setting via DMX Channel
+- redo DMX map for 8 bit due to smoothing out the servo movments.
+- see about speeding up the servo libary and getting rid off the delay the 80 speeed servo timining creates.
 

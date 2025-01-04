@@ -73,7 +73,7 @@ Channel mapping
 
 // WiFi stuff
 
-bool TEST_CP         = true; // always start the configportal, even if ap found
+bool TEST_CP         = false; // always start the configportal, even if ap found
 int  TESP_CP_TIMEOUT = 15; // test cp timeout
 
 // Artnet inital settings
@@ -213,6 +213,7 @@ void setup() {
   WiFi.mode(WIFI_STA); // explicitly set mode, esp defaults to STA+AP
   
   FastLED.addLeds<WS2812B, PIN_LED_DATA,GRB>(leds, NUM_LEDS);
+  FastLED.setTemperature(CarbonArc);
 
   Serial.begin(115200);
   delay(2000);
@@ -237,8 +238,8 @@ void setup() {
 	
 	Pan_servo.setPeriodHertz(50);      // Standard 50hz servo
 	Tilt_servo.setPeriodHertz(50);      // Standard 50hz servo
-  Pan_servo.setSpeed (400);
-  Tilt_servo.setSpeed (400);
+  Pan_servo.setSpeed (80);  // 70 is nice
+  Tilt_servo.setSpeed (80);
   Pan_servo.setEasingType(EASE_LINEAR);
   Tilt_servo.setEasingType(EASE_LINEAR);
 
@@ -340,6 +341,7 @@ wm.addParameter(&custom_adderess);
              leds[pixel].r = data[idx + 0];
              leds[pixel].g = data[idx + 1];
              leds[pixel].b = data[idx + 2];
+             
 /*
              if (DM_Debug_Level = 2){
               Serial.print ("Pixel = "); Serial.print(pixel);
@@ -354,46 +356,51 @@ wm.addParameter(&custom_adderess);
         pan_data2 = data[1];
         tilt_data1 = data[2];
         tilt_data2 = data[3];
-        
-        pan_16gb = (pan_data1 * 256) + pan_data2;
-        tilt_16b = (tilt_data1 * 256) + tilt_data2;
-        pan_angle = map(pan_16gb,0,65025,minUs,maxUs);
-        tilt_angle = map(tilt_16b,0,65025,minUs,maxUs);
-
-
-        
-        
-        
-
-
-//         Serial.print("Data 1= "); Serial.print(pan_data1);
-//         Serial.print (" Data 2 = "); Serial.print(pan_data2);
-//         Serial.print (" 16b value = "); Serial.print(pan_16gb);
-//         Serial.print (" Pan Angle = "); Serial.print(pan_angle);
-//         Serial.print (" Tilt Angle = "); Serial.print(tilt_angle);
-         
+              
+//        pan_16gb = (pan_data1 * 256) + pan_data2;
+//        tilt_16b = (tilt_data1 * 256) + tilt_data2;
+//        pan_angle = map(pan_16gb,0,65025,minUs,maxUs);
+//        tilt_angle = map(tilt_16b,0,65025,minUs,maxUs);
+//        pan_angle = map(pan_data1,0,255,minUs,maxUs);
+        pan_angle = map(pan_data1,0,255,0,180);
+        tilt_angle = map(tilt_data1,0,255,0,180);
         if (pan_angle != pan_angle_old or tilt_angle != tilt_angle_old) {
-    
-
-
-          
-          Pan_servo.easeTo(pan_angle);
+                    
+          Pan_servo.easeTo (pan_angle);
           Tilt_servo.easeTo(tilt_angle);        
           pan_angle_old = pan_angle;
           tilt_angle_old = tilt_angle;
 
+/*
+          while (Pan_servo.isMoving() || Tilt_servo.isMoving())
+          {
+          //  delayMicroseconds(44); // Pan_servo.getMillisForCompleteMove()*10
+
+          //delayMicroseconds ((Pan_servo.getMillisForCompleteMove());
+            Serial.print ("  | pan servo microseconds = "); Serial.print(Pan_servo.getCurrentMicroseconds());
+            Serial.print (" | pan servo time for complete move in microseconds = "); Serial.print(Pan_servo.getMillisForCompleteMove());
+              Serial.print (" | Servo moving: "); Serial.print (Pan_servo.isMoving());
+            Serial.println();
+            
+          }
+*/          
 //            if (DM_Debug_Level = 1 or 3){
-//              Serial.print (" Pan Data 1 = "); Serial.print(pan_data1);
+              Serial.print (" Pan Data 1 = "); Serial.print(pan_data1);
 //              Serial.print (" Pan Data 2 = "); Serial.print(pan_data2);
 //              Serial.print (" Pan 16b = "); Serial.print(pan_16gb);
-//              Serial.print (" Pan Angle = "); Serial.print(pan_angle);
+              Serial.print (" Pan Angle = "); Serial.print(pan_angle);
 //              Serial.print (" Pan_Speed change new = "); Serial.print(pan_change_new);
 //              Serial.print (" Pan_Speed change new = "); Serial.print(tilt_change_new);
-//              Serial.print (" Tilt Angle = "); Serial.print(tilt_angle);
+              Serial.print (" pan servo microseconds = "); Serial.print(Pan_servo.getCurrentMicroseconds());
+              Serial.print (" pan servo time for complete move in microseconds = "); Serial.print(Pan_servo.getMillisForCompleteMove());
+              Serial.print (" Servo moving: "); Serial.print (Pan_servo.isMoving());
               
-//              Serial.println();
+              Serial.println();
+
+
               //Serial.print (" Pan Angle = Update ");
 //            }
+          FastLED.show();
           }  
      });
 }

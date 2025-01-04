@@ -73,7 +73,7 @@ Channel mapping
 
 // WiFi stuff
 
-bool TEST_CP         = false; // always start the configportal, even if ap found
+bool TEST_CP         = true; // always start the configportal, even if ap found
 int  TESP_CP_TIMEOUT = 15; // test cp timeout
 
 // Artnet inital settings
@@ -214,6 +214,12 @@ void setup() {
   
   FastLED.addLeds<WS2812B, PIN_LED_DATA,GRB>(leds, NUM_LEDS);
   FastLED.setTemperature(CarbonArc);
+  
+  leds[6] = CRGB::Red;
+  
+  FastLED.setBrightness(10); // show a dim LED to represent the status 
+  FastLED.show();
+
 
   Serial.begin(115200);
   delay(2000);
@@ -254,8 +260,8 @@ void setup() {
 	pwm.attachPin(27, 10000);//10khz
 #endif
 
-  Pan_servo.easeToD(int_pos,100);
-  Tilt_servo.easeToD(int_pos,100);
+  Pan_servo.easeToD(int_pos,80);
+  Tilt_servo.easeToD(int_pos,80);
   
       
 //  more WiFi stuff
@@ -293,8 +299,8 @@ wm.addParameter(&custom_adderess);
   }
   else if(TEST_CP) {
     // start configportal always
-    delay(1000);
     Serial.println("TEST_CP ENABLED");
+    leds[0] = CRGB::Purple; // this does nothing for some reason.
     wm.setConfigPortalTimeout(TESP_CP_TIMEOUT);
     wm.startConfigPortal("Desk_LED_config","12345678");
   }
@@ -322,6 +328,11 @@ wm.addParameter(&custom_adderess);
     saveConfig();
   }
 
+
+  // confim ready for artnet
+  leds[6] = CRGB::Green;
+  delay(500);
+  FastLED.setBrightness(100); // reset the brightness.
 
   Serial.println("Looking for Artnet");
 

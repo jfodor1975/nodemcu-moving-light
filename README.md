@@ -43,6 +43,18 @@ Channel mapping
 |    26   | Reset/test  | this channel is not implemented
 */
 
+Wire colours
+Servo:
+Red - 5v+
+Brown - Gnd
+orange - Data
+
+LED borad:
+Red - 5v+
+Black - Gnd
+Blue - Data
+
+
 
 change log
 Dec 2024: rewrote all the code to work with the Esp32 c3 super mini board.
@@ -54,3 +66,9 @@ ToDo:
     - green to show a good conection 
     - purple for config protal open
     - red for no protal or connection 
+
+- Done: see about chaning the servo timing to relate to the value change of the artnet vaules.
+- add colour temp setting via DMX Channel
+- redo DMX map for 8 bit due to smoothing out the servo movments.
+- see about speeding up the servo libary and getting rid off the delay the 80 speeed servo timining creates.
+

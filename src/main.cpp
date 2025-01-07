@@ -60,7 +60,7 @@ Channel mapping
 //#define DISABLE_COMPLEX_FUNCTIONS     // Activating this disables the SINE, CIRCULAR, BACK, ELASTIC, BOUNCE and PRECISION easings. Saves up to 1850 bytes program memory.
 //#define DISABLE_MICROS_AS_DEGREE_PARAMETER // Activating this disables microsecond values as (target angle) parameter. Saves 128 bytes program memory.
 //#define DISABLE_MIN_AND_MAX_CONSTRAINTS    // Activating this disables constraints. Saves 4 bytes RAM per servo but strangely enough no program memory.
-//#define DISABLE_PAUSE_RESUME          // Activating this disables pause and resume functions. Saves 5 bytes RAM per servo.
+#define DISABLE_PAUSE_RESUME          // Activating this disables pause and resume functions. Saves 5 bytes RAM per servo.
 
 #include <ServoEasing.hpp> // added in this branch
 
@@ -74,7 +74,7 @@ Channel mapping
 // WiFi stuff
 
 bool TEST_CP         = true; // always start the configportal, even if ap found
-int  TESP_CP_TIMEOUT = 15; // test cp timeout
+int  TESP_CP_TIMEOUT = 20; // test cp timeout
 
 // Artnet inital settings
 ArtnetWiFiReceiver artnet;
@@ -244,10 +244,12 @@ void setup() {
 	
 	Pan_servo.setPeriodHertz(50);      // Standard 50hz servo
 	Tilt_servo.setPeriodHertz(50);      // Standard 50hz servo
-  Pan_servo.setSpeed (80);  // 70 is nice
-  Tilt_servo.setSpeed (80);
-  Pan_servo.setEasingType(EASE_LINEAR);
-  Tilt_servo.setEasingType(EASE_LINEAR);
+  Pan_servo.setSpeed (60);  // 70 is nice
+  Tilt_servo.setSpeed (60);
+//  Pan_servo.setEasingType(EASE_LINEAR);  // EASE_QUADRATIC_IN_OUT
+//  Tilt_servo.setEasingType(EASE_LINEAR);
+
+
 
 
   Pan_servo.attach(Pan_Pin, minUs, maxUs);
@@ -292,7 +294,7 @@ wm.setTitle("Desk Lamp");
 wm.addParameter(&custom_universe);
 wm.addParameter(&custom_adderess);
 
-
+leds[0] = CRGB::Purple; // this does nothing for some reason.
 
   if(!wm.autoConnect("Desk_LED","desk1234")) {
     Serial.println("failed to connect and hit timeout");
@@ -300,7 +302,6 @@ wm.addParameter(&custom_adderess);
   else if(TEST_CP) {
     // start configportal always
     Serial.println("TEST_CP ENABLED");
-    leds[0] = CRGB::Purple; // this does nothing for some reason.
     wm.setConfigPortalTimeout(TESP_CP_TIMEOUT);
     wm.startConfigPortal("Desk_LED_config","12345678");
   }
@@ -376,9 +377,18 @@ wm.addParameter(&custom_adderess);
         pan_angle = map(pan_data1,0,255,0,180);
         tilt_angle = map(tilt_data1,0,255,0,180);
         if (pan_angle != pan_angle_old or tilt_angle != tilt_angle_old) {
-                    
-          Pan_servo.easeTo (pan_angle);
-          Tilt_servo.easeTo(tilt_angle);        
+
+
+//        current way of setting the angle
+//          Pan_servo.easeTo (pan_angle);
+//          Tilt_servo.easeTo(tilt_angle);    
+
+//        array for the angle
+          ServoEasing::ServoEasingArray[0]->setEaseTo(pan_angle);
+          ServoEasing::ServoEasingArray[1]->setEaseTo(tilt_angle);
+          
+
+
           pan_angle_old = pan_angle;
           tilt_angle_old = tilt_angle;
 
@@ -396,14 +406,17 @@ wm.addParameter(&custom_adderess);
           }
 */          
 //            if (DM_Debug_Level = 1 or 3){
-              Serial.print (" Pan Data 1 = "); Serial.print(pan_data1);
+//              Serial.print (" Pan Data 1 = "); Serial.print(pan_data1);
 //              Serial.print (" Pan Data 2 = "); Serial.print(pan_data2);
 //              Serial.print (" Pan 16b = "); Serial.print(pan_16gb);
-              Serial.print (" Pan Angle = "); Serial.print(pan_angle);
+//              Serial.print (" Pan Angle = "); Serial.print(pan_angle);
 //              Serial.print (" Pan_Speed change new = "); Serial.print(pan_change_new);
 //              Serial.print (" Pan_Speed change new = "); Serial.print(tilt_change_new);
-              Serial.print (" pan servo microseconds = "); Serial.print(Pan_servo.getCurrentMicroseconds());
-              Serial.print (" pan servo time for complete move in microseconds = "); Serial.print(Pan_servo.getMillisForCompleteMove());
+//              Serial.print (" pan servo microseconds = "); Serial.print(Pan_servo.getCurrentMicroseconds());
+//              Serial.print (" pan servo time for complete move in microseconds = "); Serial.print(Pan_servo.getMillisForCompleteMove());
+
+              Serial.print (" Servo time = "); Serial.print(Pan_servo.getMillisForCompleteMove());Serial.print (" | ");Serial.print(Tilt_servo.getMillisForCompleteMove());
+
               Serial.print (" Servo moving: "); Serial.print (Pan_servo.isMoving());
               
               Serial.println();
@@ -411,7 +424,7 @@ wm.addParameter(&custom_adderess);
 
               //Serial.print (" Pan Angle = Update ");
 //            }
-          FastLED.show();
+//          FastLED.show();
           }  
      });
 }
@@ -421,6 +434,7 @@ void loop() {
  
   artnet.parse();  // check if artnet packet has come and execute callback
   FastLED.show();
+  updateAllServos();
  
 }
 

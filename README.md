@@ -62,13 +62,13 @@ Dec 2024: rewrote all the code to work with the Esp32 c3 super mini board.
 ToDo:
 - figure out how to get smoother sero movements, maybe try the servo easing library.
 - add  feed back from led's on wifi connection. 
-    - single LED dim about 10% led #7 thats the one i the center 
-    - green to show a good conection 
-    - purple for config protal open
-    - red for no protal or connection 
+   done - single LED dim about 10% led #7 thats the one i the center 
+   done - green to show a good conection 
+   done - purple for config protal open
+    ? - red for no protal or connection 
 
 - Done: see about chaning the servo timing to relate to the value change of the artnet vaules.
 - add colour temp setting via DMX Channel
-- redo DMX map for 8 bit due to smoothing out the servo movments.
+in progress - redo DMX map for 8 bit due to smoothing out the servo movments.
 - see about speeding up the servo libary and getting rid off the delay the 80 speeed servo timining creates.
 

@@ -54,9 +54,13 @@ Red - 5v+
 Black - Gnd
 Blue - Data
 
+Startup LED status using the center LED
+    Red - No Connection, Open portal 192.168.4.1
+    Purple - Wifi Connected, opening config protal for 30 seconds to make changes 
+    Green - Wifi Connected, Waiting for Artnet
 
 
-change log
+Change log
 Dec 2024: rewrote all the code to work with the Esp32 c3 super mini board.
 July 2026
 - added Wifi Feedback
@@ -69,8 +73,8 @@ ToDo:
 - add  feed back from led's on wifi connection. 
    done - single LED dim about 10% led #7 thats the one i the center 
    done - green to show a good conection 
-    - purple for config protal open
-    - red for no protal or connection 
+   done - purple for config protal open
+   done - red for open protal no Wifi connection 
 
 - Done: see about chaning the servo timing to relate to the value change of the artnet vaules.
 - add colour temp setting via DMX Channel

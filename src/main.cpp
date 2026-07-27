@@ -85,9 +85,15 @@ uint16_t Fixture_address = 1;
   // HTML converstion and display 
   char convertedUniverse[6];
   char convertedAddresss[3];
-
+  char version_string[10]= "0.1.1";
 
 //
+
+// Build Version string
+
+
+
+
 // LED stuff
 #define NUM_LEDS  7
 const uint8_t PIN_LED_DATA = 2;  // LED D2 pin 
@@ -286,12 +292,13 @@ wm.setTitle("Desk Lamp");
   sprintf(convertedAddresss, "%d", Fixture_address);
 
 
-  WiFiManagerParameter custom_universe("HTML_uni", "Universe", convertedUniverse, 3); // 7 == max length
+  WiFiManagerParameter custom_universe("HTML_uni", "Artnet Universe", convertedUniverse, 3); // 7 == max length
   WiFiManagerParameter custom_adderess("HTML_add", "Address", convertedAddresss, 3); // 7 == max length
+  WiFiManagerParameter custom_text("HTML_text", "Version", version_string, 10, " readonly"); // 7 == max length
 
 wm.addParameter(&custom_universe);
 wm.addParameter(&custom_adderess);
-
+wm.addParameter(&custom_text);
 
 
   if(!wm.autoConnect("Desk_LED","desk1234")) {
@@ -307,6 +314,7 @@ wm.addParameter(&custom_adderess);
     leds[4] = CRGB::Black;
     leds[5] = CRGB::Black;
     leds[6] = CRGB::Purple;  
+    FastLED.show();
 
     wm.setConfigPortalTimeout(TESP_CP_TIMEOUT);
     wm.startConfigPortal("Desk_LED_config","12345678");

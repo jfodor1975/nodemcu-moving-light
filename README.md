@@ -58,12 +58,17 @@ Blue - Data
 
 change log
 Dec 2024: rewrote all the code to work with the Esp32 c3 super mini board.
+July 2026
+- added Wifi Feedback
+    - Red = portal open waiting for config
+    - Green = Waiting for Artnet data
+    - Purple = Aux protal open for config for 30 seconds
 
 ToDo:
 - figure out how to get smoother sero movements, maybe try the servo easing library.
 - add  feed back from led's on wifi connection. 
-    - single LED dim about 10% led #7 thats the one i the center 
-    - green to show a good conection 
+   done - single LED dim about 10% led #7 thats the one i the center 
+   done - green to show a good conection 
     - purple for config protal open
     - red for no protal or connection 
 

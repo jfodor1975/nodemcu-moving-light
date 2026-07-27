@@ -60,7 +60,7 @@ Startup LED status using the center LED
     Green - Wifi Connected, Waiting for Artnet  
 
 
-Change log
+Change log  
 Dec 2024: rewrote all the code to work with the Esp32 c3 super mini board.  
 July 2026  
 - added Wifi Feedback

@@ -74,7 +74,7 @@ Channel mapping
 // WiFi stuff
 
 bool TEST_CP         = true; // always start the configportal, even if ap found
-int  TESP_CP_TIMEOUT = 15; // test cp timeout
+int  TESP_CP_TIMEOUT = 30; // test cp timeout
 
 // Artnet inital settings
 ArtnetWiFiReceiver artnet;
@@ -300,7 +300,14 @@ wm.addParameter(&custom_adderess);
   else if(TEST_CP) {
     // start configportal always
     Serial.println("TEST_CP ENABLED");
-    leds[0] = CRGB::Purple; // this does nothing for some reason.
+    leds[0] = CRGB::Black; // this does nothing for some reason.
+    leds[1] = CRGB::Black;
+    leds[2] = CRGB::Black;
+    leds[3] = CRGB::Black;  
+    leds[4] = CRGB::Black;
+    leds[5] = CRGB::Black;
+    leds[6] = CRGB::Purple;  
+
     wm.setConfigPortalTimeout(TESP_CP_TIMEOUT);
     wm.startConfigPortal("Desk_LED_config","12345678");
   }
@@ -330,11 +337,19 @@ wm.addParameter(&custom_adderess);
 
 
   // confim ready for artnet
-  leds[6] = CRGB::Green;
+    leds[0] = CRGB::Black; // this does nothing for some reason.
+    leds[1] = CRGB::Black;
+    leds[2] = CRGB::Black;
+    leds[3] = CRGB::Black;  
+    leds[4] = CRGB::Black;
+    leds[5] = CRGB::Black;
+    leds[6] = CRGB::Green; 
   delay(500);
   FastLED.setBrightness(100); // reset the brightness.
 
   Serial.println("Looking for Artnet");
+  Serial.println("IP address: ");
+  Serial.println(WiFi.localIP());
 
     artnet.begin();
 

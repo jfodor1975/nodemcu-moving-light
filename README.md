@@ -61,8 +61,8 @@ Startup LED status using the center LED
 
 
 Change log
-Dec 2024: rewrote all the code to work with the Esp32 c3 super mini board.
-July 2026
+Dec 2024: rewrote all the code to work with the Esp32 c3 super mini board.  
+July 2026  
 - added Wifi Feedback
     - Red = portal open waiting for config
     - Green = Waiting for Artnet data

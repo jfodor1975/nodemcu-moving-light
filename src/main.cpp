@@ -362,30 +362,25 @@ wm.addParameter(&custom_text);
     artnet.begin();
 
     // if Artnet packet comes to this universe, forward them to fastled directly
-    //artnet.forwardArtDmxDataToFastLED(universe1, leds, NUM_LEDS);
-
+    //artnet.forwardArtDmxDataToFastLED(Fixture_universe, leds, NUM_LEDS);
+    
     // this can be achieved manually as follows
     // if Artnet packet comes to this universe, this function (lambda) is called
-     artnet.subscribeArtDmxUniverse(Fixture_universe, [&](const uint8_t* data, uint16_t size, const ArtDmxMetadata &metadata, const ArtNetRemoteInfo &remote) {
+    artnet.subscribeArtDmxUniverse(Fixture_universe, [&](const uint8_t* data, uint16_t size, const ArtDmxMetadata &metadata, const ArtNetRemoteInfo &remote) {
     //     // set led
     //     // artnet data size per packet is 512 max
     //     // so there is max 170 pixel per packet (per universe)
-         for (size_t pixel = 0; pixel < NUM_LEDS; ++pixel) {
+    
+  
+    for (size_t pixel = 0; pixel < NUM_LEDS; ++pixel) {
              size_t idx = pixel * 3 + 4;
              leds[pixel].r = data[idx + 0];
              leds[pixel].g = data[idx + 1];
              leds[pixel].b = data[idx + 2];
-             
-/*
-             if (DM_Debug_Level = 2){
-              Serial.print ("Pixel = "); Serial.print(pixel);
-              Serial.print (" Red = ");Serial.print(data[idx +0]);
-              Serial.print (" Green = ");Serial.print(data[idx + 1]); 
-              Serial.print (" Blue = ");Serial.print(data[idx + 2]);
-              Serial.println();
-             }
-*/
+             FastLED.show();
          }
+
+       
         pan_data1 = data[0];
         pan_data2 = data[1];
         tilt_data1 = data[2];
@@ -419,22 +414,22 @@ wm.addParameter(&custom_text);
           }
 */          
 //            if (DM_Debug_Level = 1 or 3){
-              Serial.print (" Pan Data 1 = "); Serial.print(pan_data1);
+//              Serial.print (" Pan Data 1 = "); Serial.print(pan_data1);
 //              Serial.print (" Pan Data 2 = "); Serial.print(pan_data2);
 //              Serial.print (" Pan 16b = "); Serial.print(pan_16gb);
-              Serial.print (" Pan Angle = "); Serial.print(pan_angle);
+//              Serial.print (" Pan Angle = "); Serial.print(pan_angle);
 //              Serial.print (" Pan_Speed change new = "); Serial.print(pan_change_new);
 //              Serial.print (" Pan_Speed change new = "); Serial.print(tilt_change_new);
-              Serial.print (" pan servo microseconds = "); Serial.print(Pan_servo.getCurrentMicroseconds());
-              Serial.print (" pan servo time for complete move in microseconds = "); Serial.print(Pan_servo.getMillisForCompleteMove());
-              Serial.print (" Servo moving: "); Serial.print (Pan_servo.isMoving());
+//              Serial.print (" pan servo microseconds = "); Serial.print(Pan_servo.getCurrentMicroseconds());
+//              Serial.print (" pan servo time for complete move in microseconds = "); Serial.print(Pan_servo.getMillisForCompleteMove());
+//              Serial.print (" Servo moving: "); Serial.print (Pan_servo.isMoving());
               
-              Serial.println();
+//              Serial.println();
 
 
               //Serial.print (" Pan Angle = Update ");
 //            }
-          FastLED.show();
+          
           }  
      });
 }
@@ -443,7 +438,7 @@ wm.addParameter(&custom_text);
 void loop() {
  
   artnet.parse();  // check if artnet packet has come and execute callback
-  FastLED.show();
+  //FastLED.show();
  
 }
 

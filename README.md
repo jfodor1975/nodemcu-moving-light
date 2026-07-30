@@ -67,6 +67,9 @@ July 2026
     - Red = portal open waiting for config
     - Green = Waiting for Artnet data
     - Purple = Aux protal open for config for 30 seconds
+    - smoothed out pixels a bit more       
+
+
 
 ToDo:
 - figure out how to get smoother sero movements, maybe try the servo easing library.

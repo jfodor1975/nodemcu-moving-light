@@ -83,4 +83,5 @@ ToDo:
 - add colour temp setting via DMX Channel
 - redo DMX map for 8 bit due to smoothing out the servo movments.
 - see about speeding up the servo libary and getting rid off the delay the 80 speeed servo timining creates.
+- add idenitfy mode for Configuration? not sure how to do this yet.
 

@@ -85,7 +85,7 @@ uint16_t Fixture_address = 1;
   // HTML converstion and display 
   char convertedUniverse[6];
   char convertedAddresss[3];
-  char version_string[10]= "0.1.1";
+  char version_string[10]= "0.1.2";
 
 //
 

@@ -306,7 +306,7 @@ wm.addParameter(&custom_text);
   }
   else if(TEST_CP) {
     // start configportal always
-    Serial.println("TEST_CP ENABLED");
+    Serial.println("Config_CP ENABLED");
     leds[0] = CRGB::Black; // this does nothing for some reason.
     leds[1] = CRGB::Black;
     leds[2] = CRGB::Black;
